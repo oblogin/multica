@@ -34,7 +34,7 @@ vi.mock("@multica/core/api", () => ({
   },
 }));
 
-import { ThinkingPropRow } from "./thinking-prop-row";
+import { ThinkingPropRow, ThinkingSettingField } from "./thinking-prop-row";
 
 const CLAUDE_MODEL: RuntimeModel = {
   id: "claude-sonnet-4-6",
@@ -141,6 +141,33 @@ function renderRow(
   return { ...utils, onChange, queryClient };
 }
 
+function renderSettingField(
+  props: Partial<React.ComponentProps<typeof ThinkingSettingField>> = {},
+) {
+  const onChange = vi.fn();
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <I18nProvider locale="en" resources={TEST_RESOURCES}>
+      <QueryClientProvider client={queryClient}>
+        <ThinkingSettingField
+          label="Effort"
+          runtimeId="runtime-1"
+          runtimeOnline
+          provider="codex"
+          model=""
+          value=""
+          canEdit
+          onChange={onChange}
+          {...props}
+        />
+      </QueryClientProvider>
+    </I18nProvider>,
+  );
+  return { onChange };
+}
+
 describe("ThinkingPropRow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -167,7 +194,7 @@ describe("ThinkingPropRow", () => {
       expect(mockInitiateListModels).toHaveBeenCalled();
     });
     await waitFor(() => {
-      expect(screen.queryByText("Thinking")).toBeNull();
+      expect(screen.queryByText("Effort")).toBeNull();
     });
   });
 
@@ -176,7 +203,7 @@ describe("ThinkingPropRow", () => {
 
     // Query disabled when runtimeOnline=false, so no models, levels stay
     // empty, value is empty → row stays hidden.
-    expect(screen.queryByText("Thinking")).toBeNull();
+    expect(screen.queryByText("Effort")).toBeNull();
     expect(mockInitiateListModels).not.toHaveBeenCalled();
   });
 
@@ -189,7 +216,7 @@ describe("ThinkingPropRow", () => {
     mockInitiateListModels.mockResolvedValue(listResult([NO_THINKING_MODEL]));
     renderRow({ model: "gemini-2.5-pro", value: "xhigh" });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     // The picker chip carries the raw value when it's not in the catalog.
     expect(await screen.findByText("xhigh")).not.toBeNull();
   });
@@ -212,7 +239,7 @@ describe("ThinkingPropRow", () => {
   it("renders the row with the matched label when the model still advertises the value", async () => {
     renderRow({ value: "high" });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     // Both the chip and the tooltip carry "High".
     expect((await screen.findAllByText("High")).length).toBeGreaterThan(0);
   });
@@ -220,7 +247,7 @@ describe("ThinkingPropRow", () => {
   it("renders the row with \"Default effort\" when value is empty and the model exposes levels", async () => {
     renderRow({ value: "" });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     // Empty value means Multica omits --effort, so the local CLI's
     // config decides — chip + tooltip both read "Default effort".
     expect((await screen.findAllByText("Default effort")).length).toBeGreaterThan(0);
@@ -229,7 +256,7 @@ describe("ThinkingPropRow", () => {
   it("inherits the base Claude model catalog for a context-tagged model", async () => {
     renderRow({ model: "claude-sonnet-4-6[1m]", value: "" });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     expect((await screen.findAllByText("Default effort")).length).toBeGreaterThan(0);
   });
 
@@ -250,7 +277,7 @@ describe("ThinkingPropRow", () => {
       expect(mockInitiateListModels).toHaveBeenCalled();
     });
     await waitFor(() => {
-      expect(screen.queryByText("Thinking")).toBeNull();
+      expect(screen.queryByText("Effort")).toBeNull();
     });
     // Crucially, `Ultra` from the Default entry is never offered.
     expect(screen.queryByText("Ultra")).toBeNull();
@@ -272,7 +299,7 @@ describe("ThinkingPropRow", () => {
       value: "ultra",
     });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     expect(await screen.findByText("ultra")).not.toBeNull();
     fireEvent.click(screen.getByRole("button"));
     fireEvent.click(await screen.findByText("Default effort"));
@@ -285,7 +312,7 @@ describe("ThinkingPropRow", () => {
     // because only their empty-model resolution is unknowable here.
     renderRow({ provider: "claude", model: "", value: "" });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     // CLAUDE_MODEL (Default) advertises Low/Medium/High — the picker shows them.
     expect((await screen.findAllByText("Default effort")).length).toBeGreaterThan(0);
   });
@@ -304,7 +331,7 @@ describe("ThinkingPropRow", () => {
     // synchronous "is it absent yet" check passes before the data could have
     // rendered and would hold even if the row were about to appear. This waits
     // the full timeout and fails if the row ever shows up.
-    await expect(screen.findByText("Thinking")).rejects.toThrow();
+    await expect(screen.findByText("Effort")).rejects.toThrow();
     // None of the entry's levels leak into the picker.
     expect(screen.queryByText("Max")).toBeNull();
   });
@@ -315,7 +342,7 @@ describe("ThinkingPropRow", () => {
     mockGetListModelsResult.mockResolvedValue(listResult([OMP_MODEL]));
     renderRow({ provider: "omp", model: "devin/swe-2", value: "" });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     expect(
       (await screen.findAllByText("Default effort")).length,
     ).toBeGreaterThan(0);
@@ -330,10 +357,40 @@ describe("ThinkingPropRow", () => {
       value: "max",
     });
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     expect(await screen.findByText("max")).not.toBeNull();
     fireEvent.click(screen.getByRole("button"));
     fireEvent.click(await screen.findByText("Default effort"));
     expect(onChange).toHaveBeenCalledWith("");
+  });
+});
+
+describe("ThinkingSettingField", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockInitiateListModels.mockResolvedValue(listResult([CODEX_DEFAULT_MODEL]));
+    mockGetListModelsResult.mockResolvedValue(listResult([CODEX_DEFAULT_MODEL]));
+  });
+
+  afterEach(cleanup);
+
+  it("shows default effort for an agent using the Codex default model", async () => {
+    renderSettingField();
+
+    await waitFor(() => expect(mockInitiateListModels).toHaveBeenCalled());
+    expect(screen.getByText("Effort")).not.toBeNull();
+    expect(screen.getByText("Default effort")).not.toBeNull();
+    expect(screen.getByText("Choose a model to set a specific effort.")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: /effort/i })).toBeNull();
+    expect(screen.queryByText("Ultra")).toBeNull();
+  });
+
+  it("offers the selected model's effort levels in agent settings", async () => {
+    const { onChange } = renderSettingField({ model: "gpt-5.6-sol" });
+
+    await screen.findByRole("button", { name: /thinking/i });
+    fireEvent.click(screen.getByRole("button", { name: /thinking/i }));
+    fireEvent.click(await screen.findByText("High"));
+    expect(onChange).toHaveBeenCalledWith("high");
   });
 });

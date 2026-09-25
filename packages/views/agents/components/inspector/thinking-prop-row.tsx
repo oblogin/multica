@@ -17,7 +17,7 @@ import { findModelCapabilityEntry } from "./model-capability";
  * already has a `thinking_level` saved (model swap into a non-thinking
  * runtime, or the daemon / CLI catalog shrank and dropped the entry),
  * we still render the row so the user can see the orphan token the
- * backend is still sending and explicit-clear it via the picker footer.
+ * backend is still sending and clear it via the default option.
  * PR1's per-model invalid behavior is daemon-side warn/drop, not a
  * synchronous DB clear, so the frontend has to surface the persisted
  * state honestly.
@@ -89,25 +89,35 @@ export function ThinkingSettingField({
   canEdit: boolean;
   onChange: (next: string) => Promise<void> | void;
 }) {
+  const { t } = useT("agents");
   const modelsQuery = useQuery(
     runtimeModelsOptions(runtimeOnline ? runtimeId : null),
   );
   const models = modelsQuery.data?.models ?? [];
   const entry = pickModelEntry(models, model, provider);
   const levels = entry?.thinking?.supported_levels ?? [];
+  const needsExplicitModel =
+    !model && (provider === "codex" || provider === "omp");
 
-  if (levels.length === 0 && !value) return null;
+  if (levels.length === 0 && !value && !needsExplicitModel) return null;
 
   return (
     <SettingsRow label={label} size="select-wide">
-      <ThinkingPicker
-        variant="field"
-        showLabel={false}
-        value={value}
-        levels={levels}
-        canEdit={canEdit}
-        onChange={onChange}
-      />
+      <div>
+        <ThinkingPicker
+          variant="field"
+          showLabel={false}
+          value={value}
+          levels={levels}
+          canEdit={canEdit && (!needsExplicitModel || !!value)}
+          onChange={onChange}
+        />
+        {needsExplicitModel && !value && canEdit && (
+          <p className="mt-1.5 text-caption text-muted-foreground">
+            {t(($) => $.pickers.thinking_requires_model)}
+          </p>
+        )}
+      </div>
     </SettingsRow>
   );
 }
@@ -122,8 +132,8 @@ function pickModelEntry(
   // comes from the local config.toml and can be any installed model, so we
   // must NOT preview the flagged Default entry's effort catalog — gpt-5.6-sol
   // alone advertises `ultra`, which the actually-configured model may not
-  // support. Fail closed (no preview): the row hides unless a stale level is
-  // persisted, in which case it still renders so the orphan can be cleared.
+  // support. Do not offer levels for that unknown model; the settings form
+  // still shows the current default effort and asks for an explicit model.
   // Mirrors the backend ValidateThinkingLevel. (MUL-4347)
   //
   // omp is fenced off for the same reason with a different cause: its
