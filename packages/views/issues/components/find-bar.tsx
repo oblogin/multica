@@ -63,6 +63,17 @@ export function FindBar({
         className,
       )}
     >
+      {/* Lightning CSS warns on valid ::highlight() selectors in bundled CSS. */}
+      <style>{`
+        ::highlight(multica-find) {
+          background-color: var(--find-match);
+          color: var(--find-match-foreground);
+        }
+        ::highlight(multica-find-active) {
+          background-color: var(--find-match-active);
+          color: var(--find-match-foreground);
+        }
+      `}</style>
       <Search className="size-3.5 shrink-0 text-muted-foreground" />
       <Input
         ref={inputRef}
