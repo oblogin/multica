@@ -1,6 +1,11 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@multica/ui/components/ui/button";
 import {
@@ -27,6 +32,17 @@ interface CollectionPageHeaderProps {
   className?: string;
 }
 
+const CollectionTitleInTabContext = createContext(false);
+
+/** Desktop supplies the collection name and count in its tab strip. */
+export function CollectionTitleInTabProvider({ children }: { children: ReactNode }) {
+  return (
+    <CollectionTitleInTabContext.Provider value={true}>
+      {children}
+    </CollectionTitleInTabContext.Provider>
+  );
+}
+
 /**
  * Shared dashboard collection header: entity icon, title, optional count and
  * supporting copy on the left; page-level actions on the right.
@@ -40,21 +56,31 @@ export function CollectionPageHeader({
   actions,
   className,
 }: CollectionPageHeaderProps) {
+  const titleInTab = useContext(CollectionTitleInTabContext);
   return (
     <PageHeader className={className}>
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <Icon
-          aria-hidden="true"
-          className="size-4 shrink-0 text-muted-foreground"
-        />
-        <h1 className="truncate text-body font-medium">{title}</h1>
-        {typeof count === "number" && count > 0 ? (
+        {!titleInTab && (
+          <Icon
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        )}
+        <h1 className={cn("truncate text-body font-medium", titleInTab && "sr-only")}>
+          {title}
+        </h1>
+        {!titleInTab && typeof count === "number" && count > 0 ? (
           <span className="shrink-0 font-mono text-caption tabular-nums text-muted-foreground">
             {count}
           </span>
         ) : null}
         {description ? (
-          <p className="ml-2 hidden min-w-0 truncate text-caption text-muted-foreground md:block">
+          <p
+            className={cn(
+              "hidden min-w-0 truncate text-caption text-muted-foreground md:block",
+              !titleInTab && "ml-2",
+            )}
+          >
             {description}
             {learnMore ? (
               <>

@@ -3,6 +3,7 @@ export {
   CollectionPageHeader,
   CollectionPageHeaderAction,
   CollectionPageState,
+  CollectionTitleInTabProvider,
 } from "./collection-page";
 export { ROUTE_ICON_COMPONENTS, routeIconForPath } from "./route-icon-components";
 export {
