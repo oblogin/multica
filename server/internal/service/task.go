@@ -3795,6 +3795,9 @@ func (s *TaskService) FinalizeTaskClaim(
 	}
 	receipt := task.DeliveredCommentIds
 	err := s.runInTx(ctx, func(qtx *db.Queries) error {
+		if err := lockTaskInteractionScope(ctx, qtx, task); err != nil {
+			return fmt.Errorf("lock claim interaction scope: %w", err)
+		}
 		if authorize != nil {
 			if err := authorize(qtx, &token); err != nil {
 				return fmt.Errorf("authorize claim delivery: %w", err)

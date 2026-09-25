@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -72,7 +73,8 @@ func interactionJSON(v interactionRecord, canAnswer bool) map[string]any {
 		"questions": json.RawMessage(v.Questions), "status": v.Status,
 		"reason": v.Reason.String, "version": v.Version,
 		"expires_at": v.ExpiresAt, "detached_expires_at": v.DetachedExpiresAt,
-		"can_answer":   canAnswer && (v.Status == "pending" || v.Status == "open"),
+		"can_answer": canAnswer && ((v.Status == "pending" && time.Now().Before(v.ExpiresAt)) ||
+			(v.Status == "open" && time.Now().Before(v.DetachedExpiresAt))),
 		"assign_count": v.AssignCount,
 	}
 	if v.ThreadID.Valid {
@@ -204,6 +206,7 @@ func (h *Handler) hasAssignableInteraction(ctx context.Context, task db.AgentTas
 		WHERE i.workspace_id=iss.workspace_id AND i.issue_id=$1 AND i.agent_id=$2
 		AND i.comment_thread_id IS NOT DISTINCT FROM $3
 		AND source.status IN ('completed','failed') AND i.status='answered_detached'
+		AND i.assign_count<2
 	)`, task.IssueID, task.AgentID, task.CommentThreadID).Scan(&pending)
 	return pending, err
 }
@@ -300,7 +303,8 @@ func (h *Handler) CreateDetachedInteraction(w http.ResponseWriter, r *http.Reque
 	existing, err := scanInteraction(tx.QueryRow(r.Context(), `SELECT `+interactionColumns+` FROM task_interaction
 		WHERE task_id=$1 AND client_create_id=$2`, task.ID, requestID))
 	if err == nil {
-		if string(existing.Questions) != string(questions) {
+		var savedQuestions []interactionQuestion
+		if json.Unmarshal(existing.Questions, &savedQuestions) != nil || !reflect.DeepEqual(savedQuestions, req.Questions) {
 			writeErrorCode(w, 409, "idempotency_conflict", "request id was used for different questions")
 			return
 		}
