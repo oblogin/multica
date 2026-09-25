@@ -59,3 +59,5 @@ The daemon routes require a daemon token for that workspace; a task token cannot
 Only single-choice and free-text Claude questions are supported in the live path. A multi-select question receives an explicit refusal instructing the agent to create a detached question with `multica task ask`; that detached question is then visible in the issue and inbox. The daemon emits periodic waiting status while polling, and its normal cancellation stops polling and the Claude process.
 
 The live path must remain disabled until a real Claude `agentintegration` smoke has verified the control request and response against the installed CLI. Real-agent smoke tests require explicit authorization under `AGENTS.md`.
+
+On 2026-09-25, one authorized smoke run on Haiku and one on Sonnet both reported that `AskUserQuestion` was unavailable in the current non-interactive CLI session. Neither run produced a control request or an acknowledgement. This is a failed compatibility gate, so the live feature flag must stay off. Anthropic's documented `canUseTool` question flow is an Agent SDK integration; the current raw CLI invocation has not demonstrated equivalent behavior.

@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"os"
 	"os/exec"
 	"strings"
 	"sync/atomic"
@@ -28,11 +29,15 @@ func TestClaudeRealAskUserQuestionControlProtocol(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
 	defer cancel()
+	model := os.Getenv("MULTICA_REAL_AGENT_SMOKE_MODEL")
+	if model == "" {
+		model = "haiku"
+	}
 	var requested, acknowledged atomic.Int32
 	session, err := backend.Execute(ctx,
 		"Use AskUserQuestion to ask exactly: Which scope? Offer A and B. Wait for the user answer, then reply with exactly the selected letter.",
 		ExecOptions{
-			Cwd: t.TempDir(), Timeout: 110 * time.Second,
+			Cwd: t.TempDir(), Model: model, Timeout: 110 * time.Second,
 			LiveQuestion: func(_ context.Context, requestID string, input json.RawMessage) (map[string]string, error) {
 				requested.Add(1)
 				if requestID == "" || !strings.Contains(string(input), "Which scope?") {

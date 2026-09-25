@@ -131,3 +131,61 @@ func TestLiveInteractionCapabilityRequiresFeatureAndClaim(t *testing.T) {
 		})
 	}
 }
+
+func TestLiveInteractionAnswerVersusSourceCompletion(t *testing.T) {
+	f := newSupplementFixture(t, "claude", "running", false)
+	dbfx.Cleanup(t, `DELETE FROM inbox_item WHERE issue_id=$1 AND type='task_interaction'`, f.issueID)
+	dbfx.Cleanup(t, `DELETE FROM task_interaction_audit WHERE issue_id=$1`, f.issueID)
+	dbfx.Cleanup(t, `DELETE FROM task_interaction WHERE issue_id=$1`, f.issueID)
+	dbfx.Cleanup(t, `DELETE FROM task_interaction_capability WHERE task_id=$1`, f.taskID)
+	generation := time.Date(2026, 9, 24, 14, 0, 0, 0, time.UTC)
+	dbfx.Exec(t, `UPDATE agent_task_queue SET dispatched_at=$2 WHERE id=$1`, f.taskID, generation)
+	dbfx.Exec(t, `INSERT INTO task_interaction_capability
+		(task_id,workspace_id,issue_id,runtime_id,claim_generation,capability,live_enabled)
+		VALUES($1,$2,$3,$4,$5,$6,true)`, f.taskID, testWorkspaceID, f.issueID,
+		f.runtimeID, generation, protocol.DaemonCapabilityTaskInteractionLiveV1)
+	oldFlag := testHandler.cfg.LiveInteractions
+	testHandler.cfg.LiveInteractions = true
+	t.Cleanup(func() { testHandler.cfg.LiveInteractions = oldFlag })
+	create := withURLParam(newDaemonTokenRequest(http.MethodPost, "/live", map[string]any{
+		"runtime_id": f.runtimeID, "dispatched_at": generation.Format(time.RFC3339Nano),
+		"process_nonce": uuid.NewString(), "provider_request_id": "race-request",
+		"questions": []map[string]string{{"id": "q0", "question": "Which scope?"}},
+	}, testWorkspaceID, "live-race"), "taskId", f.taskID)
+	var created map[string]any
+	testutil.Call(t, testHandler.CreateLiveTaskInteraction, create).Want(http.StatusCreated).JSON(&created)
+	interactionID := created["id"].(string)
+	answer := withURLParams(newRequest(http.MethodPost, "/answer", map[string]any{
+		"expected_version": 1, "client_request_id": uuid.NewString(), "answer": map[string]string{"q0": "A"},
+	}), "id", f.issueID, "taskId", f.taskID, "interactionId", interactionID)
+	start := make(chan struct{})
+	answerStatus, completeStatus := make(chan int, 1), make(chan int, 1)
+	go func() {
+		<-start
+		w := httptest.NewRecorder()
+		testHandler.AnswerTaskInteraction(w, answer)
+		answerStatus <- w.Code
+	}()
+	go func() { <-start; w := completeTaskViaHandler(t, f.taskID, "done"); completeStatus <- w.Code }()
+	close(start)
+	answerResult := <-answerStatus
+	if answerResult != http.StatusOK && answerResult != http.StatusConflict {
+		t.Fatalf("answer/terminal race: answer %d", answerResult)
+	}
+	if status := <-completeStatus; status != http.StatusOK {
+		t.Fatalf("answer/terminal race: completion %d", status)
+	}
+	var interactionStatus string
+	if err := testPool.QueryRow(t.Context(), `SELECT status FROM task_interaction WHERE id=$1`, interactionID).Scan(&interactionStatus); err != nil {
+		t.Fatal(err)
+	}
+	if answerResult == http.StatusOK && interactionStatus != "answered_detached" {
+		t.Fatalf("answered before completion: status=%q", interactionStatus)
+	}
+	if answerResult == http.StatusConflict && interactionStatus != "open" {
+		t.Fatalf("completion before answer: status=%q", interactionStatus)
+	}
+	if n := dbfx.Count(t, `SELECT count(*) FROM agent_task_queue WHERE retry_of_task_id=$1 OR trigger_evidence_ref_id=$2`, f.taskID, interactionID); n > 1 {
+		t.Fatalf("answer/terminal race created %d successors", n)
+	}
+}
