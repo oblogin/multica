@@ -6,6 +6,7 @@ import type { InboxItem } from "@multica/core/types";
 import { NavigationProvider } from "../../navigation";
 import { I18nProvider } from "@multica/core/i18n/react";
 import enInbox from "../../locales/en/inbox.json";
+import enIssues from "../../locales/en/issues.json";
 
 vi.mock("@multica/core/issue-statuses/hooks", () => ({
   // The catalog is server state; these suites render leaves without a
@@ -37,7 +38,7 @@ import { InboxContextMenuProvider } from "./inbox-context-menu";
 import type { InboxRowActions } from "./inbox-item-actions";
 import { InboxListItem } from "./inbox-list-item";
 
-const TEST_RESOURCES = { en: { inbox: enInbox } };
+const TEST_RESOURCES = { en: { inbox: enInbox, issues: enIssues } };
 
 function item(overrides: Partial<InboxItem> = {}): InboxItem {
   return {
@@ -95,6 +96,7 @@ function renderRow({
     onMarkRead: vi.fn(),
     onMarkUnread: vi.fn(),
     onAction: vi.fn(),
+    onDeleteIssue: vi.fn(),
     ...actions,
   };
   render(
@@ -195,6 +197,25 @@ describe("inbox row context menu", () => {
 
     expect(screen.queryByText("Open in new tab")).toBeNull();
   });
+
+  it("offers deleting the linked issue from the archived context menu", async () => {
+    const onDeleteIssue = vi.fn();
+    const { row } = renderRow({
+      entry: item({ issue_id: "issue-9", archived: true }),
+      view: "archived",
+      actions: { onDeleteIssue },
+    });
+    fireEvent.contextMenu(row);
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Delete issue" }));
+    expect(onDeleteIssue).toHaveBeenCalledWith("issue-9");
+  });
+
+  it("does not offer issue deletion for a failed creation without an issue", async () => {
+    const { row } = renderRow({ entry: item({ issue_id: null, type: "quick_create_failed" }) });
+    fireEvent.contextMenu(row);
+    await screen.findByText("Archive");
+    expect(screen.queryByText("Delete issue")).toBeNull();
+  });
 });
 
 // A touch pointer has neither hover nor right-click, so the row's compact menu
@@ -245,13 +266,21 @@ describe("inbox row compact menu", () => {
     );
   });
 
+  it("offers issue deletion from the compact menu", async () => {
+    const onDeleteIssue = vi.fn();
+    renderRow({ entry: item({ issue_id: "issue-9" }), actions: { onDeleteIssue } });
+    openMenu();
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Delete issue" }));
+    expect(onDeleteIssue).toHaveBeenCalledWith("issue-9");
+  });
+
   it("does not select the row when the menu opens", () => {
     const onClick = vi.fn();
     render(
       wrap(
         <InboxContextMenuProvider
           view="inbox"
-          actions={{ onMarkRead: vi.fn(), onMarkUnread: vi.fn(), onAction: vi.fn() }}
+          actions={{ onMarkRead: vi.fn(), onMarkUnread: vi.fn(), onAction: vi.fn(), onDeleteIssue: vi.fn() }}
         >
           <InboxListItem
             item={item()}

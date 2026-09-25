@@ -587,6 +587,7 @@ export function InboxPage() {
         onMarkRead: handleMarkRead,
         onMarkUnread: handleMarkUnread,
         onAction: isArchivedView ? handleUnarchive : handleArchive,
+        onDeleteIssue: (issueId) => useModalStore.getState().open("issue-delete-confirm", { issueId }),
       }}
     >
       <InboxList

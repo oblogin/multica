@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, Check, CircleDot, ExternalLink } from "lucide-react";
+import { Archive, ArchiveRestore, Check, CircleDot, ExternalLink, Trash2 } from "lucide-react";
 import { paths, useWorkspaceSlug } from "@multica/core/paths";
 import type { InboxItem } from "@multica/core/types";
 import type { RowActionItem } from "../../common/row-actions-menu";
@@ -8,7 +8,7 @@ import { useIntentNavigate } from "../../navigation";
 import { useT } from "../../i18n";
 import type { InboxView } from "./inbox-view";
 
-/** Row-level actions the menus invoke, all keyed by inbox item id. */
+/** Row-level actions the menus invoke. Deletion targets the linked issue. */
 export interface InboxRowActions {
   onMarkRead: (id: string) => void;
   onMarkUnread: (id: string) => void;
@@ -17,6 +17,7 @@ export interface InboxRowActions {
    * reversal-of-the-current-view the row's inline button performs.
    */
   onAction: (id: string) => void;
+  onDeleteIssue: (issueId: string) => void;
 }
 
 /**
@@ -35,6 +36,7 @@ export function useInboxItemActions(
   actions: InboxRowActions | null,
 ): RowActionItem[][] {
   const { t } = useT("inbox");
+  const { t: tIssues } = useT("issues");
   // Null-safe slug (not useWorkspacePaths, which throws): keeps the menus
   // renderable outside a workspace route; the item just doesn't show.
   const slug = useWorkspaceSlug();
@@ -99,6 +101,17 @@ export function useInboxItemActions(
       onSelect: () => actions.onAction(item.id),
     },
   ]);
+
+  const issueId = item.issue_id;
+  if (issueId) {
+    groups.push([{
+      key: "delete-issue",
+      label: tIssues(($) => $.actions.delete_issue),
+      icon: <Trash2 className="h-4 w-4" />,
+      onSelect: () => actions.onDeleteIssue(issueId),
+      danger: true,
+    }]);
+  }
 
   return groups;
 }

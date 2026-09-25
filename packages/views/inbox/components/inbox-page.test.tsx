@@ -213,6 +213,7 @@ let rowActions: {
   onMarkRead: (id: string) => void;
   onMarkUnread: (id: string) => void;
   onAction: (id: string) => void;
+  onDeleteIssue: (issueId: string) => void;
 } | null = null;
 vi.mock("./inbox-context-menu", () => ({
   InboxContextMenuProvider: ({
@@ -286,6 +287,7 @@ function reset() {
   showIssueLimitUpgradePrompt.mockClear();
   showAutopilotQuotaRecoveryPrompt.mockClear();
   modalState.modal = null;
+  modalState.open.mockClear();
   vi.mocked(toast.success).mockClear();
   vi.mocked(toast.error).mockClear();
   rowActions = null;
@@ -327,6 +329,16 @@ describe("InboxPage", () => {
 
     expect(screen.getByTestId("list").dataset.view).toBe("inbox");
     expect(screen.getByTestId("row").textContent).toBe("active-1");
+  });
+
+  it("opens task deletion confirmation from an inbox row", () => {
+    reset();
+    listData.active = [item({ id: "notification-1", issue_id: "issue-9" })];
+    render(<InboxPage />);
+
+    act(() => rowActions?.onDeleteIssue("issue-9"));
+
+    expect(modalState.open).toHaveBeenCalledWith("issue-delete-confirm", { issueId: "issue-9" });
   });
 
   it("filters the list by status and priority together", () => {
