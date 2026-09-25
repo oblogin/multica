@@ -31,6 +31,7 @@ import { InboxPage } from "@multica/views/inbox";
 import { ChatPage } from "@multica/views/chat";
 import { SettingsPage } from "@multica/views/settings";
 import { useT } from "@multica/views/i18n";
+import { CollectionTitleInTabProvider } from "@multica/views/layout";
 import { Download, Server } from "lucide-react";
 import { DaemonSettingsTab } from "./components/daemon-settings-tab";
 import { UpdatesSettingsTab } from "./components/updates-settings-tab";
@@ -89,7 +90,9 @@ function PageShell() {
   return (
     <>
       <TitleSync />
-      <Outlet />
+      <CollectionTitleInTabProvider>
+        <Outlet />
+      </CollectionTitleInTabProvider>
     </>
   );
 }

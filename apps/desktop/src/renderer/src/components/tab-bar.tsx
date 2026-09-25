@@ -37,12 +37,13 @@ import { useScrollFade } from "@multica/ui/hooks/use-scroll-fade";
 import { SIDEBAR_WRAPPER_FILL_CLASS } from "@multica/ui/components/ui/sidebar";
 import { cn } from "@multica/ui/lib/utils";
 import { useTabStore, useActiveGroup, type Tab } from "@/stores/tab-store";
-import { paths } from "@multica/core/paths";
+import { parseTabSubject, paths } from "@multica/core/paths";
 import {
   useTabPresentation,
   ResourceLeadingVisual,
 } from "@multica/views/layout";
 import { parseIssueWindowPath } from "../../../shared/issue-window";
+import { useCollectionTabCounts } from "./collection-tab-counts";
 
 const TAB_SCROLL_FADE_SIZE = 24;
 const TAB_ENTRY_EASE = [0.22, 1, 0.36, 1] as const;
@@ -185,6 +186,7 @@ function SortableTabItem({
   isNew,
   shouldReduceMotion,
   showSeparator,
+  collectionCounts,
 }: {
   tab: Tab;
   isActive: boolean;
@@ -202,6 +204,7 @@ function SortableTabItem({
    * faded out while either of the two tabs it divides is hovered.
    */
   showSeparator: boolean;
+  collectionCounts: Record<string, number | undefined>;
 }) {
   const setActiveTab = useTabStore((s) => s.setActiveTab);
   const closeTab = useTabStore((s) => s.closeTab);
@@ -215,6 +218,16 @@ function SortableTabItem({
   // updated as the cache updates. `tab.title` is only a persisted first-frame
   // fallback. See @multica/views useTabPresentation.
   const { visual, title } = useTabPresentation(tab.url, tab.title);
+  const subject = parseTabSubject(tab.url);
+  const count =
+    subject.kind === "page" &&
+    !(
+      subject.page === "autopilots" &&
+      new URLSearchParams(tab.url.split("?")[1] ?? "").get("tab") === "wakeups"
+    )
+      ? collectionCounts[subject.page]
+      : undefined;
+  const label = count === undefined ? title : `${title}, ${count}`;
 
   // Persist the active tab's resolved title so it survives as the next
   // session's first-frame fallback. The tab strip itself always renders the
@@ -301,10 +314,10 @@ function SortableTabItem({
         e.preventDefault();
         handleClose(e);
       }}
-      aria-label={tab.pinned ? `${title} (pinned)` : title}
+      aria-label={tab.pinned ? `${label} (pinned)` : label}
       data-tab-active={isActive ? "true" : undefined}
       data-tab-entering={isEntering ? "true" : undefined}
-      title={tab.pinned ? `${title} (pinned)` : undefined}
+      title={tab.pinned ? `${label} (pinned)` : label}
       style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
       className={cn(
         "group relative flex size-full min-w-0 items-center gap-1.5 px-2.5 text-caption transition-colors",
@@ -325,6 +338,14 @@ function SortableTabItem({
       >
         {title}
       </span>
+      {count !== undefined && (
+        <span
+          aria-hidden="true"
+          className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground"
+        >
+          {count}
+        </span>
+      )}
       <span
         onClick={handleTogglePin}
         onPointerDown={stopDragOnAction}
@@ -556,6 +577,7 @@ function NewTabButton() {
 
 export function TabBar() {
   const group = useActiveGroup();
+  const collectionCounts = useCollectionTabCounts();
   const moveTab = useTabStore((s) => s.moveTab);
   const activeWorkspaceSlug = useTabStore((s) => s.activeWorkspaceSlug);
   const shouldReduceMotion = useReducedMotion() ?? false;
@@ -687,6 +709,7 @@ export function TabBar() {
                         // the pinned-zone divider already separates this pair
                         !(previousTab.pinned && !tab.pinned)
                       }
+                      collectionCounts={collectionCounts}
                     />
                     {tab.pinned &&
                       index === pinnedCount - 1 &&
