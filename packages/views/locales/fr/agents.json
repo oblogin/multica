@@ -239,10 +239,9 @@
     "model_custom_use": "Utiliser « {{value}} »",
     "model_clear": "Effacer (utiliser la valeur par défaut du fournisseur)",
     "model_clear_title": "Effacer et revenir à la valeur par défaut du fournisseur de ce runtime",
-    "thinking_default": "Suivre la configuration du CLI",
+    "thinking_default": "Effort par défaut",
+    "thinking_default_description": "Utiliser la configuration locale du CLI",
     "thinking_tooltip": "Réflexion · {{value}}",
-    "thinking_clear": "Suivre la configuration du CLI",
-    "thinking_clear_title": "Effacer la surcharge et laisser la configuration locale du CLI (claude/codex) décider du niveau de raisonnement",
     "service_tier_default": "Valeur par défaut du runtime",
     "service_tier_standard": "Standard",
     "service_tier_standard_description": "Vitesse et consommation standard",
@@ -317,7 +316,7 @@
       "execution_hint": "Les options non spécifiées utilisent les valeurs par défaut du runtime.",
       "access": "Accès"
     },
-    "thinking_label": "Réflexion",
+    "thinking_label": "Effort",
     "speed_label": "Vitesse",
     "access": {
       "private": {

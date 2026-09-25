@@ -221,10 +221,9 @@
     "model_custom_use": "\"{{value}}\" を使用",
     "model_clear": "クリア（プロバイダーのデフォルトを使用）",
     "model_clear_title": "選択をクリアし、ランタイムのプロバイダーのデフォルトに戻します",
-    "thinking_default": "CLI 設定に従う",
+    "thinking_default": "デフォルトの推論レベル",
+    "thinking_default_description": "ローカル CLI の設定を使用",
     "thinking_tooltip": "思考 · {{value}}",
-    "thinking_clear": "CLI 設定に従う",
-    "thinking_clear_title": "上書きをクリアし、推論レベルをローカルの CLI 設定（claude/codex）に任せます",
     "service_tier_default": "ランタイムのデフォルト",
     "service_tier_standard": "標準",
     "service_tier_standard_description": "通常速度と標準使用量",
@@ -895,7 +894,7 @@
       "execution_hint": "未指定の項目はランタイムの既定値を使います。",
       "access": "アクセス"
     },
-    "thinking_label": "思考",
+    "thinking_label": "推論レベル",
     "speed_label": "速度",
     "access": {
       "private": {

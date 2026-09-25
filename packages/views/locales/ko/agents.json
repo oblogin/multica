@@ -229,10 +229,9 @@
     "model_custom_use": "\"{{value}}\" 사용",
     "model_clear": "지우기(제공자 기본값 사용)",
     "model_clear_title": "선택을 지우고 런타임 제공자의 기본값으로 돌아갑니다",
-    "thinking_default": "CLI 설정 따르기",
+    "thinking_default": "기본 추론 수준",
+    "thinking_default_description": "로컬 CLI 설정 사용",
     "thinking_tooltip": "추론 · {{value}}",
-    "thinking_clear": "CLI 설정 따르기",
-    "thinking_clear_title": "재정의를 지우고 추론 수준을 로컬 CLI 설정(claude/codex)에 맡깁니다",
     "service_tier_default": "런타임 기본값",
     "service_tier_standard": "표준",
     "service_tier_standard_description": "기본 속도 및 표준 사용량",
@@ -895,7 +894,7 @@
       "execution_hint": "지정하지 않은 옵션은 런타임 기본값을 사용합니다.",
       "access": "접근 권한"
     },
-    "thinking_label": "추론",
+    "thinking_label": "추론 수준",
     "speed_label": "속도",
     "access": {
       "private": {

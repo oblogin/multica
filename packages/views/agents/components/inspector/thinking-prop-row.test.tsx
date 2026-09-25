@@ -191,23 +191,20 @@ describe("ThinkingPropRow", () => {
 
     await screen.findByText("Thinking");
     // The picker chip carries the raw value when it's not in the catalog.
-    expect(await screen.findByText("xhigh")).toBeInTheDocument();
+    expect(await screen.findByText("xhigh")).not.toBeNull();
   });
 
-  it("clears the orphan value via the picker footer, emitting onChange(\"\")", async () => {
+  it("clears the orphan value via default effort, emitting onChange(\"\")", async () => {
     mockInitiateListModels.mockResolvedValue(listResult([NO_THINKING_MODEL]));
     const { onChange } = renderRow({
       model: "gemini-2.5-pro",
       value: "xhigh",
     });
 
-    // Wait until the row mounts with the orphan value, then open the
-    // popover and fire the clear footer. The footer is the only target
-    // matching the i18n `thinking_clear_title` copy.
+    // Wait until the row mounts with the orphan value, then choose default effort.
     await screen.findByText("xhigh");
     fireEvent.click(screen.getByRole("button"));
-    const clearButton = await screen.findByTitle(/Clear the override/i);
-    fireEvent.click(clearButton);
+    fireEvent.click(await screen.findByText("Default effort"));
 
     expect(onChange).toHaveBeenCalledWith("");
   });
@@ -220,20 +217,20 @@ describe("ThinkingPropRow", () => {
     expect((await screen.findAllByText("High")).length).toBeGreaterThan(0);
   });
 
-  it("renders the row with \"Follow CLI config\" when value is empty and the model exposes levels", async () => {
+  it("renders the row with \"Default effort\" when value is empty and the model exposes levels", async () => {
     renderRow({ value: "" });
 
     await screen.findByText("Thinking");
     // Empty value means Multica omits --effort, so the local CLI's
-    // config decides — chip + tooltip both read "Follow CLI config".
-    expect((await screen.findAllByText("Follow CLI config")).length).toBeGreaterThan(0);
+    // config decides — chip + tooltip both read "Default effort".
+    expect((await screen.findAllByText("Default effort")).length).toBeGreaterThan(0);
   });
 
   it("inherits the base Claude model catalog for a context-tagged model", async () => {
     renderRow({ model: "claude-sonnet-4-6[1m]", value: "" });
 
     await screen.findByText("Thinking");
-    expect((await screen.findAllByText("Follow CLI config")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Default effort")).length).toBeGreaterThan(0);
   });
 
   it("hides the picker for an empty codex model — it must not borrow the Default's catalog (MUL-4347)", async () => {
@@ -276,10 +273,9 @@ describe("ThinkingPropRow", () => {
     });
 
     await screen.findByText("Thinking");
-    expect(await screen.findByText("ultra")).toBeInTheDocument();
+    expect(await screen.findByText("ultra")).not.toBeNull();
     fireEvent.click(screen.getByRole("button"));
-    const clearButton = await screen.findByTitle(/Clear the override/i);
-    fireEvent.click(clearButton);
+    fireEvent.click(await screen.findByText("Default effort"));
     expect(onChange).toHaveBeenCalledWith("");
   });
 
@@ -291,7 +287,7 @@ describe("ThinkingPropRow", () => {
 
     await screen.findByText("Thinking");
     // CLAUDE_MODEL (Default) advertises Low/Medium/High — the picker shows them.
-    expect((await screen.findAllByText("Follow CLI config")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Default effort")).length).toBeGreaterThan(0);
   });
 
   it("hides the picker for an empty omp model — no catalog entry is omp's real default (MUL-7412)", async () => {
@@ -321,7 +317,7 @@ describe("ThinkingPropRow", () => {
 
     await screen.findByText("Thinking");
     expect(
-      (await screen.findAllByText("Follow CLI config")).length,
+      (await screen.findAllByText("Default effort")).length,
     ).toBeGreaterThan(0);
   });
 
@@ -335,10 +331,9 @@ describe("ThinkingPropRow", () => {
     });
 
     await screen.findByText("Thinking");
-    expect(await screen.findByText("max")).toBeInTheDocument();
+    expect(await screen.findByText("max")).not.toBeNull();
     fireEvent.click(screen.getByRole("button"));
-    const clearButton = await screen.findByTitle(/Clear the override/i);
-    fireEvent.click(clearButton);
+    fireEvent.click(await screen.findByText("Default effort"));
     expect(onChange).toHaveBeenCalledWith("");
   });
 });

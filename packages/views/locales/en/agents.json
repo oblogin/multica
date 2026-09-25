@@ -239,10 +239,9 @@
     "model_custom_use": "Use \"{{value}}\"",
     "model_clear": "Clear (use provider default)",
     "model_clear_title": "Clear and fall back to the runtime's provider default",
-    "thinking_default": "Follow CLI config",
+    "thinking_default": "Default effort",
+    "thinking_default_description": "Use the local CLI configuration",
     "thinking_tooltip": "Thinking · {{value}}",
-    "thinking_clear": "Follow CLI config",
-    "thinking_clear_title": "Clear the override and let the local CLI config (claude/codex) decide the reasoning level",
     "service_tier_default": "Runtime default",
     "service_tier_standard": "Standard",
     "service_tier_standard_description": "Standard speed and standard usage",
@@ -317,7 +316,7 @@
       "execution_hint": "Unspecified options use the runtime defaults.",
       "access": "Access"
     },
-    "thinking_label": "Thinking",
+    "thinking_label": "Effort",
     "speed_label": "Speed",
     "access": {
       "private": {

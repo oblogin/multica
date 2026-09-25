@@ -259,10 +259,9 @@
     "model_custom_use": "Используйте «{{value}}»",
     "model_clear": "Очистить (использовать значение по умолчанию поставщика)",
     "model_clear_title": "Очистить и вернуться к настройкам поставщика среды выполнения по умолчанию.",
-    "thinking_default": "Следуйте конфигурации CLI",
+    "thinking_default": "Effort по умолчанию",
+    "thinking_default_description": "Уровень задаётся настройками локального CLI",
     "thinking_tooltip": "Думаем · {{value}}",
-    "thinking_clear": "Следуйте конфигурации CLI",
-    "thinking_clear_title": "Очистите переопределение и позвольте локальной конфигурации CLI (claude/codex) определить уровень обоснования.",
     "service_tier_default": "По умолчанию для среды выполнения",
     "service_tier_standard": "Стандартный",
     "service_tier_standard_description": "Стандартная скорость и стандартное использование",
@@ -337,7 +336,7 @@
       "execution_hint": "Неуказанные параметры берутся из настроек среды выполнения.",
       "access": "Доступ"
     },
-    "thinking_label": "Размышление",
+    "thinking_label": "Уровень рассуждения",
     "speed_label": "Скорость",
     "access": {
       "private": {

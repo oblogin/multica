@@ -133,11 +133,12 @@ describe("AgentExecutionOverrides", () => {
     );
   });
 
-  it("offers the exact model's thinking levels", async () => {
+  it("offers default effort and the exact model's effort levels", async () => {
     const { onChange } = renderOverrides();
 
-    await screen.findByText("Thinking");
+    await screen.findByText("Effort");
     fireEvent.click(screen.getByRole("button", { name: /thinking/i }));
+    expect(screen.getAllByText("Default effort").length).toBeGreaterThan(1);
     fireEvent.click(await screen.findByText("High"));
 
     expect(onChange).toHaveBeenCalledWith(
@@ -152,7 +153,7 @@ describe("AgentExecutionOverrides", () => {
 
     await waitFor(() => expect(mockInitiateListModels).toHaveBeenCalled());
     expect(screen.queryByText("Speed")).toBeNull();
-    expect(screen.queryByText("Thinking")).toBeNull();
+    expect(screen.queryByText("Effort")).toBeNull();
   });
 
   it("stays hidden and asks the daemon nothing while the runtime is offline", async () => {
@@ -172,7 +173,7 @@ describe("AgentExecutionOverrides", () => {
 
     await waitFor(() => expect(mockInitiateListModels).toHaveBeenCalled());
     expect(screen.queryByText("Speed")).toBeNull();
-    expect(screen.queryByText("Thinking")).toBeNull();
+    expect(screen.queryByText("Effort")).toBeNull();
   });
 
   it("fails closed for an empty model that follows the runtime default", async () => {

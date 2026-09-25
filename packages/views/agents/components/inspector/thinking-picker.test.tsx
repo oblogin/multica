@@ -45,12 +45,12 @@ describe("ThinkingPicker", () => {
     cleanup();
   });
 
-  it('renders "Follow CLI config" when value is empty', () => {
+  it('renders "Default effort" when value is empty', () => {
     renderPicker({ value: "" });
     // The trigger and the tooltip both carry the label. Empty value means
     // Multica omits --effort, so the local CLI's config decides the
     // reasoning level — see thinking-prop-row.tsx for the contract.
-    expect(screen.getAllByText("Follow CLI config").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Default effort").length).toBeGreaterThan(0);
   });
 
   it("renders the matching level label when value is set", () => {
@@ -61,14 +61,14 @@ describe("ThinkingPicker", () => {
   it("renders the raw token when the saved value is no longer in the catalog", () => {
     // Simulates a model swap that dropped the option the user previously
     // picked — we still surface what's persisted so the user can clear it,
-    // rather than silently showing "Follow CLI config".
+    // rather than silently showing "Default effort".
     renderPicker({ value: "xhigh", levels: CODEX_LEVELS });
     expect(screen.getAllByText("xhigh").length).toBeGreaterThan(0);
   });
 
   it("renders a static read-only display when canEdit=false and exposes no popover trigger", () => {
     renderPicker({ value: "low", canEdit: false });
-    expect(screen.getByText("Low")).toBeInTheDocument();
+    expect(screen.getByText("Low")).not.toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
   });
 
@@ -94,19 +94,21 @@ describe("ThinkingPicker", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("clears to empty string via the footer button when a value is set", () => {
+  it("clears to empty string via the default effort option when a value is set", () => {
     const { onChange } = renderPicker({ value: "high" });
     fireEvent.click(screen.getByRole("button"));
-    // Footer copy resolves through i18n — match a substring so we don't
-    // pin to the exact translated wording.
-    const clearButton = screen.getByTitle(/Clear the override/i);
-    fireEvent.click(clearButton);
+    fireEvent.click(screen.getByText("Default effort"));
     expect(onChange).toHaveBeenCalledWith("");
   });
 
-  it("does not render the clear button when value is already empty", () => {
-    renderPicker({ value: "" });
+  it("keeps default effort selected without submitting a redundant change", () => {
+    const { onChange } = renderPicker({ value: "" });
     fireEvent.click(screen.getByRole("button"));
-    expect(screen.queryByTitle(/Clear and fall back/i)).toBeNull();
+    const defaultOption = screen
+      .getAllByRole("button")
+      .find((b) => b.getAttribute("data-picker-item") !== null && b.textContent?.includes("Default effort"));
+    expect(defaultOption).toBeDefined();
+    fireEvent.click(defaultOption!);
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

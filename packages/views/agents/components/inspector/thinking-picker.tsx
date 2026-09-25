@@ -21,7 +21,7 @@ import { useT } from "../../../i18n";
  * Empty string is the "no override" sentinel: the backend omits the
  * effort flag entirely and the upstream CLI's own config / built-in
  * default decides what the model runs at. We render that state as
- * "Follow CLI config" rather than singling out one level as the
+ * "Default effort" rather than singling out one level as the
  * factory default, because the actual default at runtime is owned by
  * the user's local CLI install, not by Multica's catalog.
  */
@@ -142,6 +142,16 @@ export function ThinkingPicker({
         </>
       }
     >
+      <PickerItem selected={value === ""} onClick={() => void select("")}>
+        <span className="block min-w-0 flex-1 text-left">
+          <span className="truncate text-label font-medium">
+            {t(($) => $.pickers.thinking_default)}
+          </span>
+          <span className="mt-0.5 block text-micro leading-snug text-muted-foreground">
+            {t(($) => $.pickers.thinking_default_description)}
+          </span>
+        </span>
+      </PickerItem>
       {levels.map((l) => (
         <PickerItem
           key={l.value}
@@ -154,11 +164,6 @@ export function ThinkingPicker({
               Use a `<span>` with explicit `block` + `text-left` so layout
               is deterministic across rows regardless of whether the label
               row has the `default` badge sibling. */}
-          {/* No model-factory-default badge here on purpose: when the
-              picker is "Follow CLI config" (value === ""), Multica omits
-              `--effort` and the local CLI config decides — the model's
-              factory default is irrelevant to what actually fires, so
-              flagging one option as "default" was misleading. */}
           <span className="block min-w-0 flex-1 text-left">
             <span className="truncate text-label font-medium">{l.label}</span>
             {l.description && (
@@ -169,17 +174,6 @@ export function ThinkingPicker({
           </span>
         </PickerItem>
       ))}
-
-      {value && (
-        <button
-          type="button"
-          onClick={() => void select("")}
-          className="mt-1 flex w-full items-center border-t px-3 py-2 text-left text-caption text-muted-foreground transition-colors hover:bg-accent/50"
-          title={t(($) => $.pickers.thinking_clear_title)}
-        >
-          {t(($) => $.pickers.thinking_clear)}
-        </button>
-      )}
     </PropertyPicker>
   );
 
