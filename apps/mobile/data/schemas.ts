@@ -421,6 +421,8 @@ export const AgentTaskSchema: z.ZodType<AgentTask> = z.object({
   status: z
     .enum(["queued", "dispatched", "running", "completed", "failed", "cancelled"])
     .catch("queued"),
+  run_state: z.string().optional().catch(undefined),
+  interaction_outcome: z.string().optional().catch(undefined),
   priority: z.number().default(0),
   dispatched_at: z.string().nullable().default(null),
   started_at: z.string().nullable().default(null),

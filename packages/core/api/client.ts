@@ -243,6 +243,7 @@ import { type Logger, noopLogger } from "../logger";
 import { createRequestId, createSafeId } from "../utils";
 import { getCurrentSlug } from "../platform/workspace-storage";
 import { parseWithFallback } from "./schema";
+import { TaskInteractionSchema, TaskInteractionListSchema, type TaskInteraction } from "./interaction-schema";
 import {
   RuntimeProfileSchema,
   RuntimeProfileListSchema,
@@ -2692,6 +2693,37 @@ export class ApiClient {
     return parseWithFallback<AgentTask[]>(raw, AgentTaskListSchema, [], {
       endpoint: "GET /api/issues/:id/task-runs",
     });
+  }
+
+  async listTaskInteractions(issueId: string, taskId: string): Promise<TaskInteraction[]> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/tasks/${taskId}/interactions`);
+    return parseWithFallback(raw, TaskInteractionListSchema, [], {
+      endpoint: "GET /api/issues/:id/tasks/:taskId/interactions",
+    });
+  }
+
+  async answerTaskInteraction(issueId: string, taskId: string, interactionId: string,
+    expectedVersion: number, clientRequestId: string, answer: Record<string, string>): Promise<TaskInteraction> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/tasks/${taskId}/interactions/${interactionId}/answer`, {
+      method: "POST", body: JSON.stringify({ expected_version: expectedVersion, client_request_id: clientRequestId, answer }),
+    });
+    const result = parseWithFallback<TaskInteraction | null>(raw, TaskInteractionSchema, null, {
+      endpoint: "POST /api/issues/:id/tasks/:taskId/interactions/:interactionId/answer",
+    });
+    if (!result) throw new Error("Invalid interaction response");
+    return result;
+  }
+
+  async cancelTaskInteraction(issueId: string, taskId: string, interactionId: string,
+    expectedVersion: number): Promise<TaskInteraction> {
+    const raw = await this.fetch<unknown>(`/api/issues/${issueId}/tasks/${taskId}/interactions/${interactionId}/cancel`, {
+      method: "POST", body: JSON.stringify({ expected_version: expectedVersion }),
+    });
+    const result = parseWithFallback<TaskInteraction | null>(raw, TaskInteractionSchema, null, {
+      endpoint: "POST /api/issues/:id/tasks/:taskId/interactions/:interactionId/cancel",
+    });
+    if (!result) throw new Error("Invalid interaction response");
+    return result;
   }
 
   async retryTaskSupplement(issueId: string, taskId: string, commentId: string): Promise<void> {

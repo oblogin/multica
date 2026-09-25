@@ -137,6 +137,7 @@ import type { ZodType } from "zod";
 import { getCurrentSlug } from "./workspace-store";
 import { parseWithFallback } from "@/lib/parse-response";
 import { createRequestId } from "@/lib/request-id";
+import { TaskInteractionSchema, TaskInteractionListSchema, type TaskInteraction } from "@multica/core/api/interaction-schema";
 import { buildCommentUpdateBody } from "./revision";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -763,6 +764,29 @@ class ApiClient {
       EMPTY_AGENT_TASK_LIST,
       { ...opts, endpoint: "GET /api/issues/:id/task-runs" },
     );
+  }
+
+  async listTaskInteractions(issueId: string, taskId: string, opts?: { signal?: AbortSignal }): Promise<TaskInteraction[]> {
+    return this.fetchValidated(`/api/issues/${issueId}/tasks/${taskId}/interactions`,
+      TaskInteractionListSchema, [], { ...opts, endpoint: "GET /api/issues/:id/tasks/:taskId/interactions" });
+  }
+
+  async answerTaskInteraction(issueId: string, taskId: string, interactionId: string,
+    expectedVersion: number, clientRequestId: string, answer: Record<string, string>): Promise<TaskInteraction> {
+    const result = await this.fetchValidatedWith<TaskInteraction | null>(`/api/issues/${issueId}/tasks/${taskId}/interactions/${interactionId}/answer`,
+      TaskInteractionSchema, null,
+      { method: "POST", body: JSON.stringify({ expected_version: expectedVersion, client_request_id: clientRequestId, answer }) });
+    if (!result) throw new ApiError("Invalid interaction response", 0);
+    return result;
+  }
+
+  async cancelTaskInteraction(issueId: string, taskId: string, interactionId: string,
+    expectedVersion: number): Promise<TaskInteraction> {
+    const result = await this.fetchValidatedWith<TaskInteraction | null>(`/api/issues/${issueId}/tasks/${taskId}/interactions/${interactionId}/cancel`,
+      TaskInteractionSchema, null,
+      { method: "POST", body: JSON.stringify({ expected_version: expectedVersion }) });
+    if (!result) throw new ApiError("Invalid interaction response", 0);
+    return result;
   }
 
   async createComment(

@@ -320,6 +320,8 @@ export interface AgentTask {
     | "completed"
     | "failed"
     | "cancelled";
+  run_state?: string;
+  interaction_outcome?: string;
   priority: number;
   dispatched_at: string | null;
   started_at: string | null;

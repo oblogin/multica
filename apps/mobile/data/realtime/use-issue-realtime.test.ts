@@ -126,4 +126,18 @@ describe("useIssueRealtime owner issue revision on comment deletes", () => {
       expect(state.qc.getQueryState(key)?.isInvalidated).toBe(true);
     }
   });
+
+  it("refetches only the signalled task's interactions", () => {
+    const matching = issueKeys.interactions(wsId, issueId, "source-task");
+    const other = issueKeys.interactions(wsId, issueId, "other-task");
+    state.qc.setQueryData(matching, []);
+    state.qc.setQueryData(other, []);
+    useIssueRealtime(issueId);
+    const emit = connect();
+
+    emit("task:interaction_changed", { issue_id: issueId, task_id: "source-task", interaction_id: "question" });
+
+    expect(state.qc.getQueryState(matching)?.isInvalidated).toBe(true);
+    expect(state.qc.getQueryState(other)?.isInvalidated).toBe(false);
+  });
 });

@@ -20,6 +20,28 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe("task interaction API boundary", () => {
+  it("does not expose a malformed question as actionable", async () => {
+    stubFetchJson([{ status: "future_state", can_answer: true }]);
+    const client = new ApiClient("https://api.example.test");
+    await expect(client.listTaskInteractions("issue", "source")).resolves.toEqual([]);
+  });
+
+  it("sends source identity, version and stable request ID with an answer", async () => {
+    stubFetchJson({ status: "answered" });
+    const client = new ApiClient("https://api.example.test");
+    await expect(client.answerTaskInteraction("issue", "source", "question", 3, "request", { scope: "A" }))
+      .rejects.toThrow("Invalid interaction response");
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      "https://api.example.test/api/issues/issue/tasks/source/interactions/question/answer",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ expected_version: 3, client_request_id: "request", answer: { scope: "A" } }),
+      }),
+    );
+  });
+});
+
 // These tests cover the five failure modes that white-screened the desktop
 // app in past incidents. The contract is: a malformed response degrades to
 // an empty/safe shape, never throws into React.

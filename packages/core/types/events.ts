@@ -32,6 +32,7 @@ export type WSEventType =
   | "task:failed"
   | "task:message"
   | "task:cancelled"
+  | "task:interaction_changed"
   | "inbox:new"
   | "inbox:read"
   | "inbox:unread"
@@ -599,6 +600,7 @@ export interface WSEventPayloadMap {
   "task:failed": TaskFailedPayload;
   "task:message": TaskMessagePayload;
   "task:cancelled": TaskCancelledPayload;
+  "task:interaction_changed": { issue_id: string; task_id: string; interaction_id: string };
   "task:progress": unknown;
   "inbox:new": InboxNewPayload;
   "inbox:read": InboxReadPayload;

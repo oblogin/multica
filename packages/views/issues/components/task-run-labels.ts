@@ -45,8 +45,10 @@ export function useTriggerText(task: AgentTask): string {
   return t(($) => $.execution_log.trigger_initial);
 }
 
-export function useStatusLabel(status: AgentTask["status"]): string {
+export function useStatusLabel(status: AgentTask["status"], runState?: string, interactionOutcome?: string): string {
   const { t } = useT("issues");
+  if (runState === "waiting_on_user") return t(($) => $.interactions.pending);
+  if (interactionOutcome === "needs_input") return t(($) => $.interactions.needs_input);
   switch (status) {
     case "queued": return t(($) => $.execution_log.status_queued);
     case "dispatched": return t(($) => $.execution_log.status_dispatched);

@@ -67,7 +67,9 @@ export function RunRow({ task, issueId }: Props) {
 
 function StatusBadge({ task }: { task: AgentTask }) {
   const { t } = useT("issues");
-  const label = t(`runs.status.${task.status}`);
+  const label = task.run_state === "waiting_on_user" ? t("interactions.pending")
+    : task.interaction_outcome === "needs_input" ? t("interactions.needs_input")
+      : t(`runs.status.${task.status}`);
   const cls = STATUS_CLASS[task.status] ?? "text-muted-foreground";
   // For failed tasks, surface the failure_reason inline so users don't have
   // to drill in. Missing / empty / unrecognised stays as just "Failed".

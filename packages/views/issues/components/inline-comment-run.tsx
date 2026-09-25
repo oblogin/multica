@@ -79,7 +79,7 @@ export function InlineCommentRun({ run, className, viewState, showIdentity = fal
   const locale = useLocale();
   const timeAgo = useTimeAgo();
   const name = getActorName("agent", task.agent_id);
-  const status = useStatusLabel(task.status);
+  const status = useStatusLabel(task.status, task.run_state, task.interaction_outcome);
   const ended = task.status === "failed" || task.status === "cancelled";
   const cancelled = isCancelledOutcome(task);
   // One label says how the run ended (MUL-7692). The raw error stays

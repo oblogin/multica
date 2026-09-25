@@ -235,6 +235,11 @@ export function useIssueRealtime(
         ws.on("task:completed", onTaskEvent),
         ws.on("task:failed", onTaskEvent),
         ws.on("task:cancelled", onTaskEvent),
+        ws.on("task:interaction_changed", (payload) => {
+          if (payload.issue_id !== issueId || !payload.task_id) return;
+          qc.invalidateQueries({ queryKey: issueKeys.interactions(wsId, issueId, payload.task_id) });
+          qc.invalidateQueries({ queryKey: issueKeys.tasks(wsId, issueId) });
+        }),
 
         // ----- Reconnect -----
         ws.onReconnect(() => {

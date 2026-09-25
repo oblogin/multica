@@ -78,6 +78,14 @@ export const issueTasksOptions = (wsId: string | null, id: string) =>
     enabled: !!wsId && !!id,
   });
 
+export const issueInteractionsOptions = (wsId: string | null, issueId: string, taskId: string) =>
+  queryOptions({
+    queryKey: issueKeys.interactions(wsId, issueId, taskId),
+    queryFn: ({ signal }) => api.listTaskInteractions(issueId, taskId, { signal }),
+    enabled: !!wsId && !!issueId && !!taskId,
+    refetchInterval: 15_000,
+  });
+
 /**
  * File attachments uploaded to this issue or any of its comments. The
  * mobile markdown renderer reads this list to resolve `mc://file/<id>`

@@ -15,6 +15,7 @@ import { priorityLabel } from "../../issues/utils/priority-label";
 // i18next. Call sites keep the same `typeLabels[type]` access pattern.
 export function useTypeLabels(): Record<InboxItemType, string> {
   const { t } = useT("inbox");
+  const { t: tIssues } = useT("issues");
   return {
     issue_assigned: t(($) => $.types.issue_assigned),
     issue_subscribed: t(($) => $.types.issue_subscribed),
@@ -29,6 +30,7 @@ export function useTypeLabels(): Record<InboxItemType, string> {
     review_requested: t(($) => $.types.review_requested),
     task_completed: t(($) => $.types.task_completed),
     task_failed: t(($) => $.types.task_failed),
+    task_interaction: tIssues(($) => $.interactions.title),
     agent_blocked: t(($) => $.types.agent_blocked),
     agent_completed: t(($) => $.types.agent_completed),
     reaction_added: t(($) => $.types.reaction_added),

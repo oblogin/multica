@@ -8,6 +8,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import type { WSClient } from "../api/ws-client";
 import { defaultStorage } from "../platform/storage";
 import { issueKeys } from "../issues/queries";
+import { interactionKeys } from "../interactions/queries";
 import { chatKeys } from "../chat/queries";
 import { runtimeKeys } from "../runtimes/queries";
 import { workspaceWorkingAgentsKeys } from "../agents/queries";
@@ -117,15 +118,13 @@ describe("useRealtimeSync — ws instance change", () => {
     rerender({ ws: ws2 });
 
     // Should have called invalidateQueries for all workspace-scoped keys
-    // (16 workspace-scoped [incl. property definitions] + 6 per-issue
-    // prefixes + the workspace working-agents projection + 5 per-chat
-    // prefixes + 1 workspaceKeys.list() + 1 cross-workspace inbox unread
-    // summary = 31 calls).
+    // Includes the workspace-scoped interaction cache so questions missed
+    // while disconnected are fetched when the socket returns.
     //
     // Awaited rather than counted synchronously: the inbox unread summary
     // refresh cancels any in-flight request before invalidating (see
     // onInboxSummaryInvalidate), so that one lands after the synchronous ones.
-    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(31));
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledTimes(32));
   });
 
   it("does not re-invalidate when rerendered with the same ws instance", () => {
@@ -251,6 +250,19 @@ describe("useRealtimeSync — ws instance change", () => {
     expect(calls).toContainEqual(chatKeys.messagesAll());
     expect(calls).toContainEqual(chatKeys.messagesPageAll());
     expect(calls).toContainEqual(chatKeys.pendingTaskAll());
+  });
+
+  it("refetches the authorized interaction after a sparse event", () => {
+    const ws = createMockWs();
+    renderHook(() => useRealtimeSync(ws, stores), { wrapper: createWrapper(qc) });
+    const handler = vi.mocked(ws.on).mock.calls.find(([name]) => name === "task:interaction_changed")?.[1];
+    expect(handler).toBeDefined();
+    invalidateSpy.mockClear();
+
+    handler!({ issue_id: "issue", task_id: "source", interaction_id: "question" });
+
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: interactionKeys.task("ws-1", "issue", "source") });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: issueKeys.tasks("issue") });
   });
 
   it("invalidates one issue attachment cache after detached channel media binds", () => {

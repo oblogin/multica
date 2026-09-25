@@ -10,6 +10,7 @@ import { clearWorkspaceStorage } from "../platform/storage-cleanup";
 import { defaultStorage } from "../platform/storage";
 import { getCurrentWsId, getCurrentSlug } from "../platform/workspace-storage";
 import { issueKeys } from "../issues/queries";
+import { interactionKeys } from "../interactions/queries";
 import { projectKeys } from "../projects/queries";
 import { pinKeys } from "../pins/queries";
 import { autopilotKeys } from "../autopilots/queries";
@@ -642,6 +643,7 @@ function invalidateWorkspaceScopedQueries(qc: QueryClient): void {
   const wsId = getCurrentWsId();
   if (wsId) {
     qc.invalidateQueries({ queryKey: issueKeys.all(wsId) });
+    qc.invalidateQueries({ queryKey: ["interactions", wsId] });
     // Through the inbox's own entry point, not a plain invalidate: a reconnect
     // can land during the list's first load, and a plain invalidate would be
     // answered by the request already on the wire (see refreshInboxQuery).
@@ -996,6 +998,7 @@ export function useRealtimeSync(
       // every message would flood the network. Specific chat handlers below
       // still receive it via ws.on() (a separate subscription channel).
       "task:message",
+      "task:interaction_changed",
       // task:completed / task:failed deliberately NOT here. They go through
       // both the task-prefix invalidate (refreshes the agent-task-snapshot
       // cache) AND the chat-specific ws.on() handlers below. The two
@@ -1008,6 +1011,15 @@ export function useRealtimeSync(
       const prefix = msg.type.split(":")[0] ?? "";
       const refresh = refreshMap[prefix];
       if (refresh) debouncedRefresh(prefix, refresh);
+    });
+    const unsubInteractionChanged = ws.on("task:interaction_changed", (payload) => {
+      if (!payload || typeof payload !== "object" ||
+        !("issue_id" in payload) || typeof payload.issue_id !== "string" ||
+        !("task_id" in payload) || typeof payload.task_id !== "string") return;
+      const wsId = getCurrentWsId();
+      if (!wsId || !payload.issue_id || !payload.task_id) return;
+      qc.invalidateQueries({ queryKey: interactionKeys.task(wsId, payload.issue_id, payload.task_id) });
+      qc.invalidateQueries({ queryKey: issueKeys.tasks(payload.issue_id) });
     });
 
     // --- Specific event handlers (granular cache updates) ---
@@ -1747,6 +1759,7 @@ export function useRealtimeSync(
 
     return () => {
       unsubAny();
+      unsubInteractionChanged();
       unsubIssueUpdated();
       unsubIssueCreated();
       unsubIssueDeleted();
