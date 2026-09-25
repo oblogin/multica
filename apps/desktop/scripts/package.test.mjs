@@ -283,15 +283,15 @@ describe("builderArgsForTarget", () => {
         },
       ),
     ).toEqual([
-      "-c.extraMetadata.version=1.2.3",
-      "-c.mac.notarize=false",
+      "--config.extraMetadata.version=1.2.3",
+      "--config.mac.notarize=false",
       "--win",
       "nsis",
       "--arm64",
       "--publish",
       "never",
-      "-c.directories.output=dist/win-arm64",
-      "-c.publish.channel=latest-arm64",
+      "--config.directories.output=dist/win-arm64",
+      "--config.publish.channel=latest-arm64",
     ]);
   });
 
@@ -310,13 +310,13 @@ describe("builderArgsForTarget", () => {
         { hostPlatform: "win32", useScopedOutputDir: true },
       ),
     ).toEqual([
-      "-c.extraMetadata.version=1.2.3",
+      "--config.extraMetadata.version=1.2.3",
       "--win",
       "nsis",
       "--x64",
       "--publish",
       "always",
-      "-c.directories.output=dist/win-x64",
+      "--config.directories.output=dist/win-x64",
     ]);
   });
 
@@ -335,16 +335,16 @@ describe("builderArgsForTarget", () => {
         { hostPlatform: "darwin", useScopedOutputDir: true },
       ),
     ).toEqual([
-      "-c.extraMetadata.version=1.2.3",
+      "--config.extraMetadata.version=1.2.3",
       "--mac",
       "dmg",
       "zip",
       "--x64",
       "--publish",
       "always",
-      "-c.directories.output=dist/mac-x64",
-      "-c.mac.minimumSystemVersion=12.0.0",
-      "-c.publish.channel=latest-x64",
+      "--config.directories.output=dist/mac-x64",
+      "--config.mac.minimumSystemVersion=12.0.0",
+      "--config.publish.channel=latest-x64",
     ]);
   });
 
@@ -363,12 +363,12 @@ describe("builderArgsForTarget", () => {
         { hostPlatform: "darwin", useScopedOutputDir: true },
       ),
     ).toEqual([
-      "-c.extraMetadata.version=1.2.3",
+      "--config.extraMetadata.version=1.2.3",
       "--mac",
       "--arm64",
       "--publish",
       "always",
-      "-c.directories.output=dist/mac-arm64",
+      "--config.directories.output=dist/mac-arm64",
     ]);
   });
 
@@ -387,7 +387,7 @@ describe("builderArgsForTarget", () => {
         { hostPlatform: "darwin" },
       ),
     ).toEqual([
-      "-c.extraMetadata.version=1.2.3",
+      "--config.extraMetadata.version=1.2.3",
       "--linux",
       "AppImage",
       "--x64",

@@ -2,5 +2,12 @@
 *.sh text eol=lf
 docker/entrypoint.sh text eol=lf
 
+# Keep the desktop packaging scripts compatible with Vitest on Windows
+apps/desktop/scripts/package.mjs text eol=lf
+apps/desktop/scripts/package.test.mjs text eol=lf
+
+# Keep double-clickable Windows scripts in their native format
+*.bat text eol=crlf
+
 # Default behavior
 * text=auto

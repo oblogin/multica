@@ -8,7 +8,7 @@
 //
 // Builds the Electron bundles once, then for each requested target
 // (platform + arch) compiles the matching Go CLI into resources/bin/ and
-// invokes electron-builder with `-c.extraMetadata.version=<derived>` so
+// invokes electron-builder with `--config.extraMetadata.version=<derived>` so
 // the override applies at build time without mutating the tracked
 // package.json.
 //
@@ -317,8 +317,8 @@ export function builderArgsForTarget(
   } = {},
 ) {
   const builderArgs = [];
-  if (version) builderArgs.push(`-c.extraMetadata.version=${version}`);
-  if (disableMacNotarize) builderArgs.push("-c.mac.notarize=false");
+  if (version) builderArgs.push(`--config.extraMetadata.version=${version}`);
+  if (disableMacNotarize) builderArgs.push("--config.mac.notarize=false");
   builderArgs.push(PLATFORM_CONFIG[target.platform].builderFlag);
   const requestedTargets = parsed.platformTargets[target.platform];
   if (
@@ -337,7 +337,7 @@ export function builderArgsForTarget(
   builderArgs.push(...parsed.sharedArgs);
   if (useScopedOutputDir) {
     builderArgs.push(
-      `-c.directories.output=dist/${target.platform}-${target.arch}`,
+      `--config.directories.output=dist/${target.platform}-${target.arch}`,
     );
   }
   // electron-builder only adds an architecture suffix to Linux update
@@ -347,13 +347,13 @@ export function builderArgsForTarget(
   // the additional architectures to explicit channels. updater.ts pins the
   // matching channel at runtime.
   if (target.platform === "win" && target.arch === "arm64") {
-    builderArgs.push("-c.publish.channel=latest-arm64");
+    builderArgs.push("--config.publish.channel=latest-arm64");
   }
   if (target.platform === "mac" && target.arch === "x64") {
     // Scope the Electron 39 platform floor to the new Intel package so this
     // change does not rewrite established Apple Silicon bundle metadata.
-    builderArgs.push("-c.mac.minimumSystemVersion=12.0.0");
-    builderArgs.push("-c.publish.channel=latest-x64");
+    builderArgs.push("--config.mac.minimumSystemVersion=12.0.0");
+    builderArgs.push("--config.publish.channel=latest-x64");
   }
   return builderArgs;
 }
