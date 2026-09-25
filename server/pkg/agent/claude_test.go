@@ -415,6 +415,17 @@ func TestBuildClaudeArgsInheritsMCPByDefault(t *testing.T) {
 	}
 }
 
+func TestBuildClaudeArgsAllowsQuestionsOnlyForNegotiatedLiveRun(t *testing.T) {
+	args := buildClaudeArgs(ExecOptions{
+		LiveQuestion: func(context.Context, string, json.RawMessage) (map[string]string, error) {
+			return map[string]string{"scope": "A"}, nil
+		},
+	}, slog.Default())
+	if slices.Contains(args, "AskUserQuestion") {
+		t.Fatalf("live Claude run still disallows AskUserQuestion: %v", args)
+	}
+}
+
 func TestBuildClaudeArgsUsesStrictMCPForManagedConfig(t *testing.T) {
 	t.Parallel()
 
