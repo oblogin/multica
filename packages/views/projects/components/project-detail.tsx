@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { lazy, Suspense, useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { Check, ChevronRight, Link2, MoreHorizontal, PanelRight, Pin, PinOff, Trash2, UserMinus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -51,7 +51,6 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@multica/ui/components/ui/tooltip";
-import { EmojiPicker } from "@multica/ui/components/common/emoji-picker";
 import { BreadcrumbHeader } from "../../layout/breadcrumb-header";
 import {
   AnimatedRightSidebar,
@@ -73,6 +72,10 @@ import {
 import { useT } from "../../i18n";
 import { useProjectStatusLabels, useProjectPriorityLabels } from "./labels";
 import { matchesPinyin } from "../../editor/extensions/pinyin-match";
+
+const EmojiPicker = lazy(() =>
+  import("@multica/ui/components/common/emoji-picker").then((m) => ({ default: m.EmojiPicker })),
+);
 
 // ---------------------------------------------------------------------------
 // Property row — sidebar property display
@@ -101,6 +104,7 @@ function PropRow({
 
 export function ProjectDetail({ projectId }: { projectId: string }) {
   const { t } = useT("projects");
+  const { t: tCommon } = useT("common");
   const statusLabels = useProjectStatusLabels();
   const priorityLabels = useProjectPriorityLabels();
   const wsId = useWorkspaceId();
@@ -259,12 +263,14 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             }
           />
           <PopoverContent align="start" className="w-auto p-0">
-            <EmojiPicker
-              onSelect={(emoji) => {
-                handleUpdateField({ icon: emoji });
-                setIconPickerOpen(false);
-              }}
-            />
+            <Suspense fallback={<div className="p-4 text-body text-muted-foreground" role="status">{tCommon(($) => $.loading)}</div>}>
+              <EmojiPicker
+                onSelect={(emoji) => {
+                  handleUpdateField({ icon: emoji });
+                  setIconPickerOpen(false);
+                }}
+              />
+            </Suspense>
           </PopoverContent>
         </Popover>
         <TitleEditor

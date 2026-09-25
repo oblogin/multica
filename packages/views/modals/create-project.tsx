@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { lazy, Suspense, useState, useRef } from "react";
 import { CalendarClock, CalendarDays, ChevronRight, FolderOpen, GitBranch, Maximize2, Minimize2, MoreHorizontal, Pencil, Search, X as XIcon, UserMinus } from "lucide-react";
 
 /**
@@ -47,7 +47,6 @@ import {
 import { Popover, PopoverTrigger, PopoverContent } from "@multica/ui/components/ui/popover";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@multica/ui/components/ui/tooltip";
 import { Button } from "@multica/ui/components/ui/button";
-import { EmojiPicker } from "@multica/ui/components/common/emoji-picker";
 import { ContentEditor, type ContentEditorRef, TitleEditor } from "../editor";
 import { PriorityIcon } from "../issues/components/priority-icon";
 import { ActorAvatar } from "../common/actor-avatar";
@@ -79,6 +78,10 @@ import {
 import { useConfigStore } from "@multica/core/config";
 import type { LocalDirectoryExecutionMode } from "@multica/core/types";
 import { LocalDirectoryModeOptions } from "../projects/components/local-directory-mode-dialog";
+
+const EmojiPicker = lazy(() =>
+  import("@multica/ui/components/common/emoji-picker").then((m) => ({ default: m.EmojiPicker })),
+);
 
 /**
  * Builds the resource_ref for a local directory attached during project
@@ -141,6 +144,7 @@ function RepoUrlText({
 
 export function CreateProjectModal({ onClose }: { onClose: () => void }) {
   const { t } = useT("modals");
+  const { t: tCommon } = useT("common");
   // The execution-mode copy lives in the projects namespace alongside the
   // resource panel's, so both entry points describe the choice identically.
   const { t: tProjects } = useT("projects");
@@ -535,12 +539,14 @@ export function CreateProjectModal({ onClose }: { onClose: () => void }) {
               }
             />
             <PopoverContent align="start" className="w-auto p-0">
-              <EmojiPicker
-                onSelect={(emoji) => {
-                  updateIcon(emoji);
-                  setIconPickerOpen(false);
-                }}
-              />
+              <Suspense fallback={<div className="p-4 text-body text-muted-foreground" role="status">{tCommon(($) => $.loading)}</div>}>
+                <EmojiPicker
+                  onSelect={(emoji) => {
+                    updateIcon(emoji);
+                    setIconPickerOpen(false);
+                  }}
+                />
+              </Suspense>
             </PopoverContent>
           </Popover>
           <TitleEditor
