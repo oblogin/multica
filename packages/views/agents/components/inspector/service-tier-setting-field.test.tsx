@@ -109,6 +109,17 @@ describe("ServiceTierSettingField", () => {
     expect(onChange).toHaveBeenCalledWith("priority");
   });
 
+  it("shows Default, Standard, and Fast for the Codex default model", async () => {
+    const { onChange } = renderField({ model: "" });
+
+    await screen.findByText("Speed");
+    fireEvent.click(screen.getByRole("button"));
+    expect(await screen.findByText("Use the local Codex configuration")).not.toBeNull();
+    expect(screen.getByText("Standard")).not.toBeNull();
+    fireEvent.click(screen.getByText("Fast"));
+    expect(onChange).toHaveBeenCalledWith("priority");
+  });
+
   it("offers explicit standard speed separately from the runtime default", async () => {
     const { onChange } = renderField();
 
@@ -160,7 +171,7 @@ describe("ServiceTierSettingField", () => {
     await screen.findByText("Speed");
     fireEvent.click(screen.getByRole("button"));
     expect(await screen.findByText("Standard")).toBeInTheDocument();
-    expect(screen.queryByText("Fast")).toBeNull();
+    expect(screen.getByText("Fast")).not.toBeNull();
   });
 
   it("hides when the model has no tiers and no value is persisted", async () => {
@@ -173,7 +184,10 @@ describe("ServiceTierSettingField", () => {
     expect(screen.queryByText("Speed")).toBeNull();
   });
 
-  it("fails closed for an unresolved config.toml model", async () => {
+  it("hides when the catalog advertises no speed controls for the default model", async () => {
+    mockInitiateListModels.mockResolvedValue(
+      listResult([{ id: "gpt-5.4-mini", label: "GPT-5.4 mini" }]),
+    );
     renderField({ model: "" });
 
     await waitFor(() => expect(mockInitiateListModels).toHaveBeenCalled());
@@ -189,7 +203,7 @@ describe("ServiceTierSettingField", () => {
     await screen.findByText("Speed");
     expect(await screen.findByText("priority")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button"));
-    fireEvent.click(await screen.findByTitle(/Clear the speed override/i));
+    fireEvent.click(await screen.findByText("Use the local Codex configuration"));
     expect(onChange).toHaveBeenCalledWith("");
   });
 });

@@ -800,12 +800,12 @@ func ThinkingLevelRejectedWithoutModel(providerType string) bool {
 	return providerType == "omp"
 }
 
-// ValidateServiceTier reports whether value is advertised by the current
-// Codex catalog for the explicit model. An empty value is always valid and
+// ValidateServiceTier reports whether value is supported by the current
+// Codex catalog and model selection. An empty value is always valid and
 // means "inherit runtime configuration". Codex's "default" sentinel is valid
 // only when the daemon's installed CLI reports support for explicit standard
-// routing. An empty Codex model otherwise fails closed because its effective
-// model comes from config.toml and may not support the requested tier.
+// routing. For an empty Codex model, Fast follows the model resolved by the
+// CLI from config.toml; the catalog must advertise Fast for at least one model.
 func ValidateServiceTier(ctx context.Context, providerType string, cmd Command, model, value string) (bool, error) {
 	return ValidateServiceTierWith(catalogLoader(ctx, providerType, cmd), providerType, model, value)
 }
@@ -817,9 +817,6 @@ func ValidateServiceTierWith(loadCatalog func() (Catalog, error), providerType, 
 		return true, nil
 	}
 	if providerType != "codex" {
-		return false, nil
-	}
-	if value != codexStandardServiceTier && model == "" {
 		return false, nil
 	}
 	catalog, err := loadCatalog()
@@ -841,6 +838,16 @@ func ValidateServiceTierWith(loadCatalog func() (Catalog, error), providerType, 
 	}
 	if !catalog.Verified() {
 		return false, fmt.Errorf("%w; cannot validate %s service tier %q", errUnverifiedCatalog, providerType, value)
+	}
+	if model == "" {
+		for _, m := range catalog.Models {
+			for _, tier := range m.ServiceTiers {
+				if tier.ID == value {
+					return true, nil
+				}
+			}
+		}
+		return false, nil
 	}
 	for _, m := range catalog.Models {
 		if m.ID != model {

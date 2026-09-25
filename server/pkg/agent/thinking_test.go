@@ -527,7 +527,7 @@ func TestValidateCapabilitiesPassThroughUnverifiedCatalog(t *testing.T) {
 	}
 	for name, catalog := range unverified {
 		load := func() (Catalog, error) { return catalog, nil }
-		for _, model := range []string{"listed", "unlisted"} {
+		for _, model := range []string{"listed", "unlisted", ""} {
 			if ok, err := ValidateServiceTierWith(load, "codex", model, "priority"); ok || !errors.Is(err, errUnverifiedCatalog) {
 				t.Errorf("service tier, %s catalog, model %q: got (%v, %v), want errUnverifiedCatalog", name, model, ok, err)
 			}
@@ -537,7 +537,7 @@ func TestValidateCapabilitiesPassThroughUnverifiedCatalog(t *testing.T) {
 	// A verified catalog still decides: a listed model without the value, or a
 	// model it does not list, drops the value without an error.
 	verified := func() (Catalog, error) { return Catalog{Models: []Model{listed}}, nil }
-	for _, model := range []string{"listed", "unlisted"} {
+	for _, model := range []string{"listed", "unlisted", ""} {
 		if ok, err := ValidateThinkingLevelWith(verified, "codex", model, "high"); ok || err != nil {
 			t.Errorf("verified catalog, model %q thinking: got (%v, %v), want (false, nil)", model, ok, err)
 		}
@@ -551,9 +551,6 @@ func TestValidateCapabilitiesPassThroughUnverifiedCatalog(t *testing.T) {
 	noRead := func() (Catalog, error) { t.Error("empty model must not read catalog"); return Catalog{}, nil }
 	if ok, err := ValidateThinkingLevelWith(noRead, "codex", "", "high"); ok || err != nil {
 		t.Errorf("empty model thinking = (%v, %v), want (false, nil)", ok, err)
-	}
-	if ok, err := ValidateServiceTierWith(noRead, "codex", "", "priority"); ok || err != nil {
-		t.Errorf("empty model tier = (%v, %v), want (false, nil)", ok, err)
 	}
 }
 
@@ -1171,6 +1168,9 @@ func TestValidateServiceTierRejectsExplicitStandardForOldCodex(t *testing.T) {
 }
 
 func TestValidateServiceTierCodexPerModelCatalog(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell-script fake binary requires a POSIX shell")
+	}
 	t.Parallel()
 	fake := writeFakeCodexModelsBinary(t)
 	for _, tc := range []struct {
@@ -1183,7 +1183,7 @@ func TestValidateServiceTierCodexPerModelCatalog(t *testing.T) {
 		{provider: "codex", model: "gpt-5.6-sol", tier: "default", want: true},
 		{provider: "codex", model: "", tier: "default", want: true},
 		{provider: "codex", model: "gpt-5.6-luna", tier: "priority", want: false},
-		{provider: "codex", model: "", tier: "priority", want: false},
+		{provider: "codex", model: "", tier: "priority", want: true},
 		{provider: "claude", model: "gpt-5.6-sol", tier: "priority", want: false},
 		{provider: "codex", model: "gpt-5.6-sol", tier: "", want: true},
 	} {
@@ -1194,6 +1194,36 @@ func TestValidateServiceTierCodexPerModelCatalog(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("ValidateServiceTier(%q, %q, Command{Path: %q}) = %v, want %v", tc.provider, tc.model, tc.tier, got, tc.want)
 		}
+	}
+}
+
+func TestValidateServiceTierCodexDefaultModelFast(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct {
+		name   string
+		models []Model
+		want   bool
+	}{
+		{
+			name: "fast available",
+			models: []Model{
+				{ID: "gpt-5.6-sol", ServiceTiers: []ModelServiceTier{{ID: "priority"}}},
+				{ID: "gpt-5.6-luna"},
+			},
+			want: true,
+		},
+		{
+			name:   "fast unavailable",
+			models: []Model{{ID: "gpt-5.6-luna"}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			load := func() (Catalog, error) { return Catalog{Models: tc.models}, nil }
+			got, err := ValidateServiceTierWith(load, "codex", "", "priority")
+			if err != nil || got != tc.want {
+				t.Errorf("default model fast = (%v, %v), want (%v, nil)", got, err, tc.want)
+			}
+		})
 	}
 }
 

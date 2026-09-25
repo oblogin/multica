@@ -244,11 +244,10 @@
     "thinking_requires_model": "Choisissez un modèle pour définir un effort précis.",
     "thinking_tooltip": "Réflexion · {{value}}",
     "service_tier_default": "Valeur par défaut du runtime",
+    "service_tier_default_description": "Utiliser la configuration locale de Codex",
     "service_tier_standard": "Standard",
     "service_tier_standard_description": "Vitesse et consommation standard",
-    "service_tier_tooltip": "Vitesse · {{value}}",
-    "service_tier_clear": "Valeur par défaut du runtime",
-    "service_tier_clear_title": "Effacer la surcharge de vitesse et laisser la configuration locale de Codex décider"
+    "service_tier_tooltip": "Vitesse · {{value}}"
   },
   "model_dropdown": {
     "label": "Modèle",

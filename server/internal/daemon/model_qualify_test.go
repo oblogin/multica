@@ -156,14 +156,13 @@ func TestResolveTaskModelSelectionReadsTheCatalogAtMostOnce(t *testing.T) {
 			wantReads: 1,
 		},
 		{
-			// codex with no explicit model fails both checks closed, and does
-			// so without a catalog read — the guard predates this change and
-			// must survive it.
-			name:      "codex without a model fails closed without reading",
+			// Codex can use Fast with its configured default model. Thinking
+			// still needs an explicit model to validate its supported levels.
+			name:      "codex default model keeps catalog-supported Fast",
 			provider:  "codex",
 			in:        taskModelSelection{ThinkingLevel: "high", ServiceTier: "priority"},
-			want:      taskModelSelection{},
-			wantReads: 0,
+			want:      taskModelSelection{ServiceTier: "priority"},
+			wantReads: 1,
 		},
 		{
 			name:      "no pinned model and no overrides reads nothing",

@@ -15,9 +15,9 @@ import { findModelCapabilityEntry } from "./model-capability";
 
 /**
  * Full-width service-tier field for Codex agents. Capability comes from the
- * resolved model's live catalog rather than a hard-coded Fast switch. An empty
- * model follows config.toml and cannot be resolved safely, so the field fails
- * closed unless a saved value needs to remain visible for explicit clearing.
+ * resolved model's live catalog rather than a hard-coded Fast switch. When the
+ * model follows config.toml, Fast is offered if the CLI advertises it for any
+ * model; Codex resolves its configured model when the agent runs.
  */
 export function ServiceTierSettingField({
   label,
@@ -43,7 +43,13 @@ export function ServiceTierSettingField({
   );
   const models = modelsQuery.data?.models ?? [];
   const entry = findModelCapabilityEntry(models, model, provider);
-  const tiers = entry?.service_tiers ?? [];
+  const defaultModelFastTier =
+    provider === "codex" && !model
+      ? models.flatMap((candidate) => candidate.service_tiers ?? []).find(
+          (tier) => tier.id === "priority",
+        )
+      : undefined;
+  const tiers = entry?.service_tiers ?? (defaultModelFastTier ? [defaultModelFastTier] : []);
   const supportsExplicitStandard = models.some(
     (candidate) =>
       candidate.supports_explicit_standard_service_tier === true,
@@ -143,6 +149,20 @@ function ServiceTierPicker({
         </>
       }
     >
+      <PickerItem
+        selected={value === ""}
+        emptyValue
+        onClick={() => void select("")}
+      >
+        <span className="block min-w-0 flex-1 text-left">
+          <span className="truncate text-label font-medium">
+            {t(($) => $.pickers.service_tier_default)}
+          </span>
+          <span className="mt-0.5 block text-micro leading-snug text-muted-foreground">
+            {t(($) => $.pickers.service_tier_default_description)}
+          </span>
+        </span>
+      </PickerItem>
       {availableTiers.map((tier) => (
         <PickerItem
           key={tier.id}
@@ -161,16 +181,6 @@ function ServiceTierPicker({
           </span>
         </PickerItem>
       ))}
-      {value ? (
-        <button
-          type="button"
-          onClick={() => void select("")}
-          className="mt-1 flex w-full items-center border-t px-3 py-2 text-left text-caption text-muted-foreground transition-colors hover:bg-accent/50"
-          title={t(($) => $.pickers.service_tier_clear_title)}
-        >
-          {t(($) => $.pickers.service_tier_clear)}
-        </button>
-      ) : null}
     </PropertyPicker>
   );
 }

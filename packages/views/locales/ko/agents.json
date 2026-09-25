@@ -234,11 +234,10 @@
     "thinking_requires_model": "추론 수준을 지정하려면 모델을 선택하세요.",
     "thinking_tooltip": "추론 · {{value}}",
     "service_tier_default": "런타임 기본값",
+    "service_tier_default_description": "로컬 Codex 설정 사용",
     "service_tier_standard": "표준",
     "service_tier_standard_description": "기본 속도 및 표준 사용량",
-    "service_tier_tooltip": "속도 · {{value}}",
-    "service_tier_clear": "런타임 기본값",
-    "service_tier_clear_title": "속도 재정의를 지우고 로컬 Codex 설정에 맡깁니다"
+    "service_tier_tooltip": "속도 · {{value}}"
   },
   "model_dropdown": {
     "label": "모델",
