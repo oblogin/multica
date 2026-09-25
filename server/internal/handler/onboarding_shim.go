@@ -493,12 +493,17 @@ func (h *Handler) BootstrapOnboardingNoRuntime(w http.ResponseWriter, r *http.Re
 	})
 }
 
-// noRuntimeIssueDescription picks the EN or ZH copy based on the user's
-// language preference. ZH selected on any "zh*" prefix (zh, zh-CN, zh-Hans).
-// Matches pre-v3 service.workspace_content.go behavior 1:1.
+// noRuntimeIssueDescription picks the onboarding issue copy based on the user's
+// language preference. Region-tagged Chinese and Russian preferences use their
+// respective translations.
 func noRuntimeIssueDescription(language pgtype.Text) string {
-	if language.Valid && strings.HasPrefix(language.String, "zh") {
-		return zhNoRuntimeIssueDescription()
+	if language.Valid {
+		if strings.HasPrefix(language.String, "zh") {
+			return zhNoRuntimeIssueDescription()
+		}
+		if strings.HasPrefix(language.String, "ru") {
+			return ruNoRuntimeIssueDescription()
+		}
 	}
 	return enNoRuntimeIssueDescription()
 }
@@ -587,6 +592,45 @@ func zhNoRuntimeIssueDescription() string {
 		"Kimi CLI 官方文档：https://moonshotai.github.io/kimi-cli/zh/guides/getting-started.html",
 		"",
 		"运行时连上后，你就可以创建 Multica Helper，开始一次有智能体参与的上手引导。",
+	}, "\n")
+}
+
+func ruNoRuntimeIssueDescription() string {
+	return strings.Join([]string{
+		"Добро пожаловать в Multica.",
+		"",
+		"Чтобы агенты могли выполнять задачи, сначала подключите среду выполнения. Пока вы её устанавливаете, Multica можно использовать для управления проектами.",
+		"",
+		"## Начните с задач",
+		"",
+		"1. Создайте проект для текущей работы.",
+		"2. Добавьте несколько задач и переведите их между статусами backlog, todo, in_progress и done.",
+		"3. Настройте приоритеты и метки, оставьте комментарии и подпишитесь на обновления.",
+		"4. Следите за назначениями и упоминаниями во входящих.",
+		"",
+		"После подключения среды выполнения агенты смогут работать над теми же задачами.",
+		"",
+		"## Установите первую среду выполнения агента",
+		"",
+		"Полное руководство: https://multica.ai/docs/install-agent-runtime",
+		"",
+		"Для начала можно использовать Codex:",
+		"",
+		"1. Убедитесь, что установлен Node.js.",
+		"2. Установите Codex:",
+		"   npm i -g @openai/codex",
+		"3. Войдите в учётную запись:",
+		"   codex",
+		"4. Проверьте, что терминал находит программу:",
+		"   codex --version",
+		"5. Перезапустите демон Multica:",
+		"   multica daemon restart",
+		"6. Вернитесь на страницу сред выполнения и обновите её. Codex должен появиться в сети.",
+		"7. Создайте первого агента на этой среде выполнения, назначьте ему задачу и установите для неё статус todo.",
+		"",
+		"Справка по Codex: https://developers.openai.com/codex/cli",
+		"",
+		"После подключения среды выполнения вы сможете создать Multica Helper для знакомства с работой агентов.",
 	}, "\n")
 }
 

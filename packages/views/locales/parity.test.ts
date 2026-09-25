@@ -41,11 +41,27 @@ function flattenKeys(obj: unknown, prefix = ""): string[] {
 }
 
 function normalizePlural(key: string): string {
-  return key.replace(/_(one|other)$/, "_count");
+  return key.replace(/_(zero|one|two|few|many|other)$/, "_count");
 }
 
 function keySet(bundle: Record<string, unknown>): Set<string> {
   return new Set(flattenKeys(bundle).map(normalizePlural));
+}
+
+function flattenStrings(obj: unknown, prefix = ""): Record<string, string> {
+  if (typeof obj === "string") return { [prefix]: obj };
+  if (obj === null || typeof obj !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(obj as Json).flatMap(([key, value]) =>
+      Object.entries(flattenStrings(value, prefix ? `${prefix}.${key}` : key)),
+    ),
+  );
+}
+
+function interpolationTokens(value: string): string[] {
+  return [...value.matchAll(/\{\{([^{}]+)\}\}/g)]
+    .map((match) => match[1]!)
+    .sort();
 }
 
 const en = RESOURCES.en;
@@ -107,6 +123,45 @@ describe("dead plural-key guard", () => {
           .map((key) => `${ns}:${key}`),
       );
       expect(offenders).toEqual([]);
+    });
+  }
+});
+
+describe("Russian plural forms", () => {
+  for (const ns of Object.keys(en)) {
+    it(`${ns} resolves every CLDR cardinal form without falling back to English`, () => {
+      const enKeys = flattenKeys(en[ns]);
+      const ruKeys = new Set(flattenKeys(RESOURCES.ru[ns]));
+      const stems = new Set(
+        enKeys
+          .filter((key) => /_(one|other)$/.test(key))
+          .map((key) => key.replace(/_(one|other)$/, "")),
+      );
+      for (const stem of stems) {
+        for (const form of ["one", "few", "many", "other"]) {
+          expect(ruKeys.has(`${stem}_${form}`), `${ns}:${stem}_${form}`).toBe(true);
+        }
+      }
+    });
+  }
+});
+
+describe("Russian string integrity", () => {
+  for (const ns of Object.keys(en)) {
+    it(`${ns} has visible strings and preserves interpolation tokens`, () => {
+      const source = flattenStrings(en[ns]);
+      const translated = flattenStrings(RESOURCES.ru[ns]);
+      for (const [key, value] of Object.entries(translated)) {
+        const fallbackKey = key.replace(/_(few|many)$/, "_other");
+        const original = source[key] ?? source[fallbackKey];
+        if (original === undefined) continue;
+        if (original.trim()) {
+          expect(value.trim().length, `${ns}:${key}`).toBeGreaterThan(0);
+        }
+        expect(interpolationTokens(value), `${ns}:${key}`).toEqual(
+          interpolationTokens(original),
+        );
+      }
     });
   }
 });

@@ -1,0 +1,124 @@
+{
+  "page": {
+    "title": "Входящие",
+    "back": "Входящие"
+  },
+  "menu": {
+    "mark_all_read": "Отметить все как прочитанные",
+    "archive_all": "Архивировать все",
+    "archive_all_read": "Архивировать все прочитанные",
+    "archive_completed": "Архивировать завершённые"
+  },
+  "filters": {
+    "tooltip": "Фильтровать входящие",
+    "active_count_one": "{{count}} активный фильтр",
+    "active_count_other": "{{count}} активных фильтров",
+    "status": "Статус",
+    "priority": "Приоритет",
+    "from": "От",
+    "unread_only": "Только непрочитанное",
+    "notification_count_one": "{{count}} уведомление",
+    "notification_count_other": "{{count}} уведомлений",
+    "clear": "Очистить фильтры",
+    "empty": "Нет уведомлений, соответствующих вашим фильтрам",
+    "notification_count_many": "{{count}} уведомлений",
+    "active_count_few": "{{count}} активных фильтра",
+    "active_count_many": "{{count}} активных фильтров",
+    "notification_count_few": "{{count}} уведомления"
+  },
+  "context_menu": {
+    "mark_read": "Отметить как прочитанное",
+    "mark_unread": "Отметить как непрочитанное",
+    "archive": "Архивировать",
+    "unarchive": "Восстановить",
+    "open_in_new_tab": "Открыть в новой вкладке"
+  },
+  "list": {
+    "loading_selection": "Загрузка уведомления…",
+    "empty": "Нет уведомлений",
+    "mark_done_tooltip": "Отметить как выполненное",
+    "archive_tooltip": "Архивировать",
+    "time": {
+      "just_now": "только что",
+      "minutes": "{{count}} мин",
+      "hours": "{{count}} ч",
+      "days": "{{count}} д"
+    },
+    "archived_title": "Архивировано",
+    "archived_empty": "Нет заархивированных уведомлений",
+    "unarchive_tooltip": "Восстановить",
+    "actions_aria": "Действия с уведомлением",
+    "load_more": "Загрузить больше",
+    "loading_more": "Загрузка…",
+    "retry": "Повторить попытку"
+  },
+  "detail": {
+    "select_prompt": "Выберите уведомление, чтобы просмотреть подробную информацию.",
+    "empty": "Входящие пусты",
+    "original_input": "Исходный запрос",
+    "retry_with_context": "Повторить попытку с контекстом",
+    "edit_advanced": "Изменить в расширенной форме",
+    "autopilot_quota_exceeded_body": "В этой рабочей области достигнут лимит запусков автоматизации за текущий период: {{limit}}. Новые запуски станут доступны, когда лимит обновится {{resetAt}}.",
+    "autopilot_quota_upgrade": "Посмотреть доступные тарифы",
+    "archive": "Архивировать",
+    "unarchive": "Восстановить"
+  },
+  "types": {
+    "issue_assigned": "Назначено",
+    "issue_subscribed": "Подписка на задачу",
+    "unassigned": "Не назначено",
+    "assignee_changed": "Изменён исполнитель",
+    "status_changed": "Статус изменён",
+    "priority_changed": "Приоритет изменён",
+    "start_date_changed": "Дата начала изменена",
+    "due_date_changed": "Срок выполнения изменён",
+    "new_comment": "Новый комментарий",
+    "mentioned": "Вас упомянули",
+    "review_requested": "Запрошена проверка",
+    "task_completed": "Запуск завершён",
+    "task_failed": "Не удалось выполнить запуск",
+    "agent_blocked": "Агент заблокирован",
+    "agent_completed": "Агент завершил работу",
+    "reaction_added": "Реакция",
+    "quick_create_done": "Создано с помощью агента",
+    "quick_create_failed": "Не удалось создать с помощью агента",
+    "quick_create_unconfirmed": "Создание с агентом не подтверждено",
+    "autopilot_paused": "Автоматизация приостановлена",
+    "autopilot_quota_exceeded": "Достигнут лимит запусков автоматизации"
+  },
+  "labels": {
+    "set_status_to": "Статус изменён на",
+    "set_priority_to": "Приоритет изменён на",
+    "assigned_to": "Исполнитель: {{name}}",
+    "removed_assignee": "Исполнитель удалён",
+    "set_start_date_to": "Дата начала: {{date}}",
+    "removed_start_date": "Дата начала удалена",
+    "set_due_date_to": "Срок: {{date}}",
+    "removed_due_date": "Срок удалён",
+    "reacted_to_comment": "Реакция {{emoji}} на ваш комментарий",
+    "created_with_agent": "Создано с помощью агента: {{identifier}}",
+    "failed_with_detail": "Ошибка: {{detail}}",
+    "autopilot_quota_blocked": "Запуск заблокирован: достигнут лимит"
+  },
+  "toasts": {
+    "source_context_retry_started": "Повторная попытка началась с исходным контекстом",
+    "archived": "Уведомление заархивировано",
+    "unarchived": "Уведомление восстановлено"
+  },
+  "errors": {
+    "archived_lookup_failed": "Не удалось загрузить связанное уведомление.",
+    "source_context_retry_failed": "Не удалось повторить попытку с исходным контекстом.",
+    "source_context_retry_unavailable": "Повторить действие с этим контекстом больше нельзя. Начните заново с точки ветвления.",
+    "mark_read_failed": "Не удалось пометить как прочитанное.",
+    "mark_unread_failed": "Не удалось пометить как непрочитанное.",
+    "archive_failed": "Не удалось заархивировать",
+    "mark_done_failed": "Не удалось отметить выполненное.",
+    "mark_all_read_failed": "Не удалось пометить все как прочитанные.",
+    "archive_all_failed": "Не удалось заархивировать все",
+    "archive_all_read_failed": "Не удалось заархивировать прочитанные элементы.",
+    "archive_completed_failed": "Не удалось выполнить архивирование.",
+    "unarchive_failed": "Не удалось разархивировать",
+    "archived_load_failed": "Не удалось загрузить архивированные уведомления.",
+    "filters_load_failed": "Не удалось загрузить фильтры."
+  }
+}

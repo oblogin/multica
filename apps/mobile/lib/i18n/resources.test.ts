@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { SUPPORTED_LOCALES } from "./types";
 
 const LOCALES_ROOT = path.resolve(__dirname, "../../locales");
 
@@ -30,44 +31,70 @@ function flatten(value: unknown, prefix = ""): Set<string> {
   return keys;
 }
 
+function leafValues(value: unknown, prefix = ""): Map<string, string> {
+  const values = new Map<string, string>();
+  if (typeof value === "string") {
+    values.set(prefix, value);
+    return values;
+  }
+  if (typeof value !== "object" || value === null) return values;
+  for (const [key, child] of Object.entries(value)) {
+    const nextKey = prefix ? `${prefix}.${key}` : key;
+    for (const [childKey, text] of leafValues(child, nextKey)) {
+      values.set(childKey, text);
+    }
+  }
+  return values;
+}
+
+function placeholders(value: string): string[] {
+  return [...value.matchAll(/{{\s*([^{}]+?)\s*}}/g)]
+    .map((match) => match[1])
+    .sort();
+}
+
 describe("mobile i18n resources", () => {
-  it("has an English resource for every supported namespace and locale", () => {
-    const enNamespaces = fs
-      .readdirSync(path.join(LOCALES_ROOT, "en"))
-      .filter((file) => file.endsWith(".json"))
-      .sort();
-    const zhNamespaces = fs
-      .readdirSync(path.join(LOCALES_ROOT, "zh-Hans"))
-      .filter((file) => file.endsWith(".json"))
-      .sort();
-    expect(zhNamespaces).toEqual(enNamespaces);
-  });
+  for (const locale of SUPPORTED_LOCALES.filter((value) => value !== "en")) {
+    it(`keeps ${locale} namespaces and keys aligned with English`, () => {
+      const enResources = readLocale("en");
+      const translatedResources = new Map(readLocale(locale));
+      expect([...translatedResources.keys()].sort()).toEqual(
+        enResources.map(([namespace]) => namespace).sort(),
+      );
 
-  it("keeps Simplified Chinese keys aligned with English", () => {
+      for (const [namespace, value] of enResources) {
+        const translatedValue = translatedResources.get(namespace);
+        const enKeys = flatten(value);
+        const translatedKeys = flatten(translatedValue);
+        // Chinese does not distinguish grammatical plural forms.
+        const missing = [...enKeys].filter((key) => {
+          if (translatedKeys.has(key)) return false;
+          return !(locale === "zh-Hans" && key.endsWith("_one") &&
+            translatedKeys.has(`${key.slice(0, -4)}_other`));
+        });
+        expect(missing, `missing ${locale} keys in ${namespace}`).toEqual([]);
+        expect(
+          [...translatedKeys].filter((key) => !enKeys.has(key)),
+          `extra ${locale} keys in ${namespace}`,
+        ).toEqual([]);
+      }
+    });
+  }
+
+  it("preserves interpolation parameters in Russian", () => {
     const enResources = readLocale("en");
-    const zhResources = new Map(readLocale("zh-Hans"));
-
+    const ruResources = new Map(readLocale("ru"));
     for (const [namespace, value] of enResources) {
-      const zhValue = zhResources.get(namespace);
-      expect(zhValue, `missing zh-Hans namespace: ${namespace}`).toBeDefined();
-      const enKeys = flatten(value);
-      const zhKeys = flatten(zhValue);
-      // i18next plural rules use `_one` / `_other`; Chinese has only `_other`.
-      const missing = [...enKeys].filter((key) => {
-        if (zhKeys.has(key)) return false;
-        if (key.endsWith("_one") && zhKeys.has(`${key.slice(0, -4)}_other`)) {
-          return false;
-        }
-        return true;
-      });
-      expect(
-        missing,
-        `missing zh-Hans keys in ${namespace}`,
-      ).toEqual([]);
-      expect(
-        [...zhKeys].filter((key) => !enKeys.has(key)),
-        `extra zh-Hans keys in ${namespace}`,
-      ).toEqual([]);
+      const enValues = leafValues(value);
+      const ruValues = leafValues(ruResources.get(namespace));
+      for (const [key, english] of enValues) {
+        const russian = ruValues.get(key);
+        expect(russian, `missing ru text for ${namespace}:${key}`).toBeDefined();
+        expect(
+          placeholders(russian ?? ""),
+          `changed interpolation in ${namespace}:${key}`,
+        ).toEqual(placeholders(english));
+      }
     }
   });
 });

@@ -1,0 +1,271 @@
+{
+  "tabs": {
+    "all": "Все",
+    "created": "Созданные мной",
+    "assigned": "Назначенные мне",
+    "agents": "Агенты",
+    "members": "Участники"
+  },
+  "status": {
+    "queued": "В очереди",
+    "deferred": "В очереди",
+    "dispatched": "Запускается",
+    "waiting_local_directory": "Ожидание каталога",
+    "running": "Выполняется",
+    "completed": "Завершён",
+    "failed": "Ошибка",
+    "cancelled": "cancelled",
+    "backlog": "backlog",
+    "todo": "todo",
+    "in_progress": "in_progress",
+    "in_review": "in_review",
+    "done": "done",
+    "blocked": "blocked"
+  },
+  "category": {
+    "unstarted": "unstarted",
+    "started": "started",
+    "done": "done",
+    "closed": "closed"
+  },
+  "priority": {
+    "none": "Без приоритета",
+    "low": "Низкий",
+    "medium": "Средний",
+    "high": "Высокий",
+    "urgent": "Срочный"
+  },
+  "filters": {
+    "title": "Фильтры",
+    "status": "Статус",
+    "priority": "Приоритет",
+    "assignee": "Исполнитель",
+    "project": "Проект",
+    "label": "Метка",
+    "clear": "Сбросить фильтры",
+    "apply": "Применить",
+    "due_date": "Срок"
+  },
+  "list": {
+    "empty": "Нет задач по выбранным фильтрам",
+    "count_other": "Задач: {{count}}",
+    "search_placeholder": "Поиск задач и проектов"
+  },
+  "detail": {
+    "properties": "Свойства",
+    "activity": "Действия",
+    "comments": "Комментарии",
+    "comment": "Комментарий",
+    "reply": "Ответить",
+    "add_comment": "Добавить комментарий...",
+    "description": "Описание",
+    "add_description": "Добавить описание...",
+    "runs": "Запуски",
+    "copy_link": "Копировать ссылку",
+    "open_on_web": "Открыть в браузере",
+    "delete_comment": "Удалить комментарий",
+    "edit_comment": "Изменить комментарий",
+    "no_runs": "Запусков пока нет"
+  },
+  "new": {
+    "title": "Новая задача",
+    "title_placeholder": "Название задачи",
+    "create": "Создать задачу",
+    "creating": "Создание...",
+    "description_placeholder": "Описание... (введите @ для упоминания)"
+  },
+  "edit": {
+    "title": "Изменить задачу",
+    "save": "Сохранить изменения",
+    "saving": "Сохранение..."
+  },
+  "activity": {
+    "created": "создал(а) задачу",
+    "status_changed": "изменил(а) статус: {{from}} → {{to}}",
+    "priority_changed": "изменил(а) приоритет: {{from}} → {{to}}",
+    "self_assigned": "назначил(а) себя исполнителем",
+    "removed_assignee": "убрал(а) исполнителя",
+    "assigned_to": "назначил(а) исполнителем {{name}}",
+    "assignee_changed": "изменил(а) исполнителя",
+    "start_date_set": "установил(а) дату начала: {{date}}",
+    "start_date_removed": "убрал(а) дату начала",
+    "due_date_set": "установил(а) срок: {{date}}",
+    "due_date_removed": "убрал(а) срок",
+    "title_changed": "переименовал(а): «{{from}}» → «{{to}}»",
+    "description_updated": "обновил(а) описание",
+    "duplicate_marked": "отметил(а) эту задачу как дубликат {{identifier}}",
+    "duplicate_unmarked": "снял(а) с этой задачи отметку о дубликате {{identifier}}",
+    "duplicate_unmarked_to": "снял(а) с этой задачи отметку о дубликате {{identifier}} и перевёл(а) в {{status}}",
+    "duplicate_unmarked_original_deleted": "снял(а) отметку о дубликате: {{identifier}} удалена",
+    "duplicate_added": "отметил(а) {{identifier}} как дубликат этой задачи",
+    "duplicate_removed": "снял(а) с {{identifier}} отметку о дубликате этой задачи",
+    "tasks_completed_one": "завершён {{count}} запуск",
+    "tasks_completed_other": "завершено запусков: {{count}}",
+    "tasks_failed_one": "не удался {{count}} запуск",
+    "tasks_failed_other": "неудачных запусков: {{count}}",
+    "squad_action_with_reason": "оценил(а) ситуацию и выполнил(а) действие: {{reason}}",
+    "squad_action": "оценил(а) ситуацию и выполнил(а) действие",
+    "squad_no_action_with_reason": "оценил(а) ситуацию: действие не требуется ({{reason}})",
+    "squad_no_action": "оценил(а) ситуацию: действие не требуется",
+    "squad_failed_with_reason": "ошибка оценки: {{reason}}",
+    "squad_failed": "ошибка оценки",
+    "squad_evaluated": "проверил(а) триггер команды агентов",
+    "commented": "оставил(а) комментарий"
+  },
+  "errors": {
+    "create_failed": "Не удалось создать задачу",
+    "load_failed": "Не удалось загрузить задачи: {{message}}"
+  },
+  "empty": {
+    "filtered": "Нет задач по текущим фильтрам.",
+    "assigned": "Вам пока не назначены задачи.",
+    "created": "Вы пока не создали ни одной задачи.",
+    "agents": "Агентам и командам агентов пока не назначены задачи.",
+    "all": "В этом рабочем пространстве пока нет задач.",
+    "members": "Участникам пока не назначены задачи."
+  },
+  "menu": {
+    "pin": "Закрепить",
+    "unpin": "Открепить",
+    "edit_details": "Изменить данные",
+    "copy_link": "Копировать ссылку",
+    "open_web": "Открыть в браузере",
+    "delete_issue": "Удалить задачу",
+    "issue_actions": "Действия с задачей"
+  },
+  "delete": {
+    "title": "Удалить задачу?",
+    "message": "{{identifier}} и её комментарии, реакции и вложения будут удалены без возможности восстановления."
+  },
+  "summary": {
+    "comment": "Запуск из комментария",
+    "autopilot": "Запуск автоматизации",
+    "chat": "Запуск из чата",
+    "quick_create": "Быстрое создание",
+    "direct": "Запуск"
+  },
+  "cancel": {
+    "title": "Отменить запуск?",
+    "message": "Агент остановится после текущего шага.",
+    "keep_running": "Продолжить запуск",
+    "cancel_task": "Отменить запуск"
+  },
+  "form": {
+    "discard_title": "Отменить изменения?",
+    "discard_message_issue": "Изменения этой задачи будут потеряны.",
+    "keep_editing": "Продолжить редактирование",
+    "save_failed": "Не удалось сохранить"
+  },
+  "picker": {
+    "unassigned": "Не назначен",
+    "agent": "Агент",
+    "needs_runtime": "Нужна среда выполнения",
+    "leader_needs_runtime": "Руководителю нужна среда выполнения",
+    "squad": "Команда агентов",
+    "no_matches": "Совпадений нет.",
+    "no_project": "Без проекта",
+    "no_projects": "В этом рабочем пространстве пока нет проектов.\nСоздайте их в браузере.",
+    "no_labels": "В этом рабочем пространстве пока нет меток.",
+    "create_label": "Создать «{{name}}»",
+    "no_members_agents": "В этом рабочем пространстве пока нет участников или агентов.",
+    "people": "Люди",
+    "agents": "Агенты",
+    "squads": "Команды агентов",
+    "issues": "Задачи",
+    "everyone": "Все (@all)",
+    "unknown": "Неизвестно",
+    "search_people": "Поиск людей",
+    "search_projects": "Поиск проектов",
+    "search_labels": "Поиск меток",
+    "search_members_agents": "Поиск участников или агентов",
+    "search_people_issues": "Поиск людей или задач",
+    "reference_issue": "Сослаться на задачу",
+    "clear": "Очистить"
+  },
+  "comments": {
+    "reply": "Ответить",
+    "react": "Добавить реакцию...",
+    "copy": "Копировать",
+    "select_text": "Выделить текст",
+    "copy_link": "Копировать ссылку",
+    "resolve": "Закрыть обсуждение",
+    "unresolve": "Открыть обсуждение снова",
+    "delete": "Удалить",
+    "delete_title": "Удалить комментарий?",
+    "delete_keep_replies": "Комментарий будет удалён без возможности восстановления. Ответы останутся в обсуждении.",
+    "delete_with_replies": "Комментарий и все ответы в обсуждении будут удалены без возможности восстановления.",
+    "more_reactions": "Больше реакций...",
+    "fallback_actor": "комментарий",
+    "composer_placeholder": "Добавить комментарий...",
+    "composer_pill": "Добавить комментарий; введите @ для упоминания..."
+  },
+  "suggestions": {
+    "everyone": "Все",
+    "all": "Все",
+    "member": "Участник",
+    "recent": "Недавние",
+    "my_issues": "Мои задачи"
+  },
+  "resolved": {
+    "a11y_folded_one": "Обсуждение закрыто: {{authors}}. {{count}} сообщение. Нажмите, чтобы развернуть.",
+    "a11y_folded_other": "Обсуждение закрыто: {{authors}}. Сообщений: {{count}}. Нажмите, чтобы развернуть.",
+    "summary_one": "Закрыто: {{authors}} · {{count}} сообщение",
+    "summary_other": "Закрыто: {{authors}} · сообщений: {{count}}",
+    "resolved_by": "Закрыл(а): {{name}}",
+    "collapse": "Свернуть",
+    "collapse_a11y": "Свернуть закрытое обсуждение"
+  },
+  "failed": {
+    "send": "Не удалось отправить",
+    "retry": "Повторить",
+    "retry_a11y": "Повторить отправку комментария",
+    "discard": "Удалить",
+    "discard_a11y": "Удалить неотправленный комментарий"
+  },
+  "resources": {
+    "title": "Прикрепить репозиторий",
+    "url": "URL репозитория",
+    "branch": "Начальная ветка (необязательно)",
+    "label": "Метка (необязательно)",
+    "attach": "Прикрепить",
+    "attaching": "Прикрепление...",
+    "branch_hint": "Запуски начинаются с этой ветки и создают запросы на слияние с ней. Оставьте поле пустым, чтобы использовать ветку репозитория по умолчанию.",
+    "commit": "Это идентификатор коммита, а не ветка. Результат запуска поступает в исходную ветку. Для разовой работы с ревизией передайте --ref в multica repo checkout.",
+    "too_long": "Не более 255 символов.",
+    "invalid_characters": "Имя ветки не может содержать пробелы и символы ~ ^ : ? * [ \\",
+    "invalid": "Недопустимое имя ветки.",
+    "failed": "Не удалось прикрепить ресурс",
+    "error": "Неизвестная ошибка"
+  },
+  "runs": {
+    "active": "Активные",
+    "past": "Прошлые",
+    "title": "Запуски агентов",
+    "status": {
+      "queued": "В очереди",
+      "deferred": "Отложен",
+      "dispatched": "Передан агенту",
+      "running": "Выполняется",
+      "waiting_local_directory": "Ожидание локального каталога",
+      "completed": "Запуск завершён",
+      "failed": "Ошибка запуска",
+      "cancelled": "Отменён"
+    }
+  },
+  "header_filter": "Фильтр",
+  "new_badge": "Новое",
+  "jump_a11y_one": "Перейти к {{count}} новому сообщению",
+  "jump_a11y_other": "Перейти к новым сообщениям. Сообщений: {{count}}",
+  "a11y": {
+    "agent_working": "Агент работает — открыть запуски",
+    "remove_mention": "Удалить упоминание {{name}}",
+    "retry_upload": "Повторить загрузку {{name}}",
+    "open_file": "Открыть {{name}}",
+    "remove_file": "Удалить {{name}}"
+  },
+  "summary.comment": "Запуск из комментария",
+  "summary.chat": "Запуск из чата",
+  "summary.direct": "Запуск",
+  "cancel.title": "Отменить запуск?",
+  "cancel.cancel_task": "Отменить запуск"
+}

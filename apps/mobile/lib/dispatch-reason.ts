@@ -1,4 +1,4 @@
-import { RUNTIME_ACCESS_DENIED_RECOVERY_COPY } from "./runtime-access-copy";
+import { i18n } from "./i18n/singleton";
 
 /**
  * Mobile-owned mirror of `packages/core/api/client.ts:dispatchReasonCode`.
@@ -27,15 +27,17 @@ export function dispatchReasonCode(err: unknown): string | undefined {
 export function sendFailureMessage(err: unknown): string {
   switch (dispatchReasonCode(err)) {
     case "invocation_not_allowed":
-      return "You no longer have permission to run this agent, so the message was not sent.";
+      return i18n.t("chat:failure.invocation_not_allowed");
     case "agent_runtime_required":
-      return "Bind a runtime to this agent before sending a message.";
+      return i18n.t("chat:failure.agent_runtime_required");
     case "runtime_access_denied":
       // The agent's owner cannot execute it on the selected private runtime.
       // Retrying never fixes this — the fix is making that runtime public or
       // rebinding/copying the agent to a runtime its owner can use.
-      return `Message not sent — ${RUNTIME_ACCESS_DENIED_RECOVERY_COPY}`;
+      return i18n.t("chat:failure.runtime_access_denied", {
+        detail: i18n.t("chat:failure.runtime_access_recovery"),
+      });
     default:
-      return "Your message could not be sent. Please try again.";
+      return i18n.t("chat:failure.default");
   }
 }

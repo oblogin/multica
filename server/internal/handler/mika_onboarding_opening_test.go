@@ -29,6 +29,14 @@ func TestMikaOnboardingOpeningCoversEveryAcceptedLanguage(t *testing.T) {
 	}
 }
 
+func TestMikaAgentDescriptionCoversEveryAcceptedLanguage(t *testing.T) {
+	for language := range mikaOnboardingLanguages {
+		if strings.TrimSpace(mikaAgentDescriptions[language]) == "" {
+			t.Errorf("language %q has no Mika description", language)
+		}
+	}
+}
+
 // Owners may rename Mika, so the opening reads the agent's current display
 // name. Hardcoding "Mika" would have a renamed agent introduce itself under a
 // name the member never chose.

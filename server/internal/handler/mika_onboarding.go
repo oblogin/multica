@@ -32,6 +32,7 @@ var mikaOnboardingLanguages = map[string]string{
 	"zh": "Simplified Chinese",
 	"ko": "Korean",
 	"ja": "Japanese",
+	"ru": "Russian",
 }
 
 // StartMikaOnboarding opens an otherwise empty Mika chat by writing two rows:
@@ -68,7 +69,7 @@ func (h *Handler) StartMikaOnboarding(w http.ResponseWriter, r *http.Request) {
 	}
 	languageName, ok := mikaOnboardingLanguages[req.Language]
 	if !ok {
-		writeError(w, http.StatusBadRequest, "language must be en, zh, ko, or ja")
+		writeError(w, http.StatusBadRequest, "language must be en, zh, ko, ja, or ru")
 		return
 	}
 

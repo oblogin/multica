@@ -2,6 +2,7 @@ import { docsHrefForLocale } from "@/lib/docs-href";
 import { createEnDict } from "./en";
 import { createJaDict } from "./ja";
 import { createKoDict } from "./ko";
+import { createRuDict } from "./ru";
 import { createZhDict } from "./zh";
 import {
   toLandingDictionaryLocale,
@@ -17,6 +18,7 @@ const dictionaryFactories: Record<
   en: createEnDict,
   ja: createJaDict,
   ko: createKoDict,
+  ru: createRuDict,
   zh: createZhDict,
 };
 

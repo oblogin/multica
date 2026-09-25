@@ -1,0 +1,76 @@
+{
+  "list": {
+    "title": "Проекты",
+    "empty": "Проектов пока нет",
+    "search_placeholder": "Поиск проектов..."
+  },
+  "status": {
+    "planned": "Запланирован",
+    "in_progress": "В работе",
+    "paused": "Приостановлен",
+    "completed": "Завершён",
+    "cancelled": "Отменён"
+  },
+  "priority": {
+    "urgent": "Срочный",
+    "high": "Высокий",
+    "medium": "Средний",
+    "low": "Низкий",
+    "none": "Без приоритета"
+  },
+  "detail": {
+    "properties": "Свойства",
+    "related_issues": "Связанные задачи",
+    "resources": "Ресурсы",
+    "lead": "Руководитель",
+    "no_resources": "Нет прикреплённых ресурсов.",
+    "add_resource": "Добавить ресурс"
+  },
+  "form": {
+    "icon_emoji": "Значок (эмодзи)",
+    "title": "Название",
+    "title_placeholder": "Название проекта",
+    "description": "Описание",
+    "description_placeholder": "О чём этот проект?",
+    "discard_title": "Отменить изменения?",
+    "discard_message": "Черновик будет потерян.",
+    "keep_editing": "Продолжить редактирование",
+    "save_failed": "Не удалось создать проект",
+    "save_failed_edit": "Не удалось сохранить"
+  },
+  "errors": {
+    "load_failed": "Не удалось загрузить проект: {{message}}"
+  },
+  "actions": {
+    "creating": "Создание...",
+    "saving": "Сохранение..."
+  },
+  "menu": {
+    "pin": "Закрепить",
+    "unpin": "Открепить",
+    "edit_details": "Изменить данные",
+    "open_web": "Открыть в браузере",
+    "project_actions": "Действия с проектом"
+  },
+  "delete": {
+    "title": "Удалить проект?",
+    "message": "Это действие нельзя отменить. Задачи проекта больше не будут связаны ни с одним проектом."
+  },
+  "properties": {
+    "status": "Статус",
+    "priority": "Приоритет",
+    "lead": "Руководитель",
+    "unassigned": "Не назначен"
+  },
+  "resources": {
+    "title": "Ресурсы",
+    "add": "Добавить",
+    "detach_title": "Открепить ресурс?",
+    "detach": "Открепить",
+    "empty": "Нет прикреплённых ресурсов."
+  },
+  "runs": {
+    "working": "В работе",
+    "count": "Запусков: {{count}}"
+  }
+}

@@ -44,6 +44,7 @@ function matchSupportedLocale(candidates: string[]): SupportedLocale {
       return DEFAULT_LOCALE;
     }
     if (lowered.startsWith("zh")) return "zh-Hans";
+    if (lowered.startsWith("ru")) return "ru";
     if (lowered.startsWith("en")) return "en";
   }
   return DEFAULT_LOCALE;
@@ -72,12 +73,11 @@ export function MobileI18nProvider({ children }: { children: ReactNode }) {
     void SecureStore.getItemAsync(LOCALE_STORAGE_KEY)
       .then((stored) => {
         if (cancelled || !stored) return;
-        if (stored !== "system" && stored !== "en" && stored !== "zh-Hans") {
+        if (stored !== "system" && stored !== "en" && stored !== "ru" && stored !== "zh-Hans") {
           return;
         }
         setPreferenceState(stored);
         if (stored !== "system") {
-          setPreferenceState(stored);
           void i18n.changeLanguage(stored);
         }
       })

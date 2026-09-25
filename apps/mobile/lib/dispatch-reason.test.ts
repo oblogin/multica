@@ -1,6 +1,11 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { dispatchReasonCode, sendFailureMessage } from "./dispatch-reason";
+import { i18n } from "./i18n/singleton";
+
+afterEach(async () => {
+  await i18n.changeLanguage("en");
+});
 
 // Shaped like `apps/mobile/data/api.ts:ApiError` — a thrown Error carrying the
 // parsed response body. Built inline rather than imported because `@/data/api`
@@ -60,5 +65,11 @@ describe("sendFailureMessage", () => {
 
   it("falls back to a retryable message for anything else", () => {
     expect(sendFailureMessage(new Error("timeout"))).toMatch(/try again/i);
+  });
+
+  it("uses the selected language for a rejected send", async () => {
+    await i18n.changeLanguage("ru");
+    expect(sendFailureMessage(apiError({ reason_code: "invocation_not_allowed" })))
+      .toMatch(/нет права/i);
   });
 });

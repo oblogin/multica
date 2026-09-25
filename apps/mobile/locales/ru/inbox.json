@@ -1,0 +1,83 @@
+{
+  "title": "Входящие",
+  "empty": {
+    "title": "Новых уведомлений нет",
+    "body": "Здесь появятся уведомления и новости от агентов."
+  },
+  "actions": {
+    "mark_read": "Отметить как прочитанное",
+    "mark_unread": "Отметить как непрочитанное",
+    "mark_all_read": "Отметить всё как прочитанное",
+    "archive": "Архивировать",
+    "archive_all": "Архивировать всё",
+    "archive_all_read": "Архивировать прочитанное",
+    "archive_completed": "Архивировать завершённое",
+    "inbox_actions": "Действия с входящими"
+  },
+  "filters": {
+    "all": "Все",
+    "unread": "Непрочитанные"
+  },
+  "archive": {
+    "confirm_title": "Архивировать всё?",
+    "confirm_body": "Все элементы входящих, включая непрочитанные, будут архивированы. Их можно будет найти на страницах задач."
+  },
+  "errors": {
+    "load_failed": "Не удалось загрузить входящие: {{message}}"
+  },
+  "detail": {
+    "priority_none": "Без приоритета",
+    "priority_low": "Низкий",
+    "priority_medium": "Средний",
+    "priority_high": "Высокий",
+    "priority_urgent": "Срочный",
+    "status_todo": "todo",
+    "status_in_progress": "in_progress",
+    "status_done": "done",
+    "status_blocked": "blocked",
+    "notification": "Уведомление",
+    "close": "Закрыть уведомление",
+    "unavailable": "Это уведомление больше недоступно.",
+    "billing_disabled": "Изменение оплаты недоступно для этого рабочего пространства. Обратитесь к его администратору.",
+    "contact_admin": "Попросите владельца или администратора рабочего пространства проверить варианты оплаты.",
+    "review_billing": "Посмотреть варианты оплаты",
+    "review_billing_web": "Откройте Multica в браузере, чтобы посмотреть варианты оплаты."
+  },
+  "type": {
+    "assigned": "Назначено вам",
+    "subscribed": "Вы подписаны",
+    "unassigned": "Назначение снято",
+    "reassigned": "Переназначено",
+    "status_changed": "Статус изменён",
+    "priority_changed": "Приоритет изменён",
+    "start_date_changed": "Дата начала изменена",
+    "due_date_changed": "Срок изменён",
+    "new_comment": "Новый комментарий",
+    "mentioned": "Вас упомянули",
+    "review_requested": "Запрошена проверка",
+    "task_completed": "Запуск завершён",
+    "task_failed": "Запуск завершился ошибкой",
+    "agent_blocked": "Агент заблокирован",
+    "agent_completed": "Агент завершил работу",
+    "reaction_added": "Добавлена реакция",
+    "quick_create_done": "Быстрое создание завершено",
+    "quick_create_failed": "Ошибка быстрого создания",
+    "quick_create_unconfirmed": "Проверьте быстро созданную задачу",
+    "autopilot_paused": "Автоматизация приостановлена",
+    "autopilot_quota_exceeded": "Достигнут лимит запусков автоматизации",
+    "set_status": "Установлен статус",
+    "set_priority": "Установлен приоритет",
+    "assigned_to": "Назначено: {{name}}",
+    "removed_assignee": "Исполнитель удалён",
+    "set_due_date": "Срок установлен: {{date}}",
+    "removed_due_date": "Срок удалён",
+    "reacted_with": "Реакция: {{emoji}}",
+    "created_with_agent": "Создано с помощью агента: {{identifier}}",
+    "failed_with_detail": "Ошибка: {{detail}}",
+    "run_limit_blocked": "Запуск заблокирован из-за превышения лимита"
+  },
+  "body": {
+    "autopilot_title_limit": "Автоматизация «{{title}}» не запущена: в этом рабочем пространстве достигнут лимит в {{limit}} запусков за текущий период. Лимит обновится {{resetAt}}.",
+    "autopilot_limit": "В этом рабочем пространстве достигнут лимит в {{limit}} запусков автоматизации за текущий период. Запуск не начался. Лимит обновится {{resetAt}}."
+  }
+}

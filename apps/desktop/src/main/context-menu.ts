@@ -15,8 +15,8 @@ import { isSafeExternalHttpUrl, openExternalSafely } from "./external-url";
 // Custom (non-role) link items below are NOT auto-localized by Electron —
 // roles like "copy" pull labels from the OS, but a custom MenuItem only
 // shows the `label` you give it. We translate by OS-preferred language so
-// the link items at least track Chinese / Japanese / Korean speakers
-// alongside the English default; everything else falls through to English,
+// the link items at least track Chinese / Japanese / Korean / Russian speakers
+// alongside the English default; other languages fall through to English,
 // which matches Chrome's behavior on those locales without app-level
 // translation files.
 export function installContextMenu(webContents: WebContents): void {
@@ -93,7 +93,7 @@ export function installContextMenu(webContents: WebContents): void {
 // language, with English as the fallback. Kept inline because the main
 // process has no shared i18n loader (the renderer's i18next is per-window
 // and not reachable from here), and pulling one in for two strings would
-// be more rope than payload. Matches the four locales the renderer ships.
+// be more rope than payload.
 type ContextMenuLabels = {
   openLink: string;
   copyLinkAddress: string;
@@ -116,9 +116,13 @@ const labelsByLocale: Record<string, ContextMenuLabels> = {
     openLink: "브라우저에서 링크 열기",
     copyLinkAddress: "링크 주소 복사",
   },
+  ru: {
+    openLink: "Открыть ссылку в браузере",
+    copyLinkAddress: "Копировать адрес ссылки",
+  },
 };
 
-// pickLabels resolves the OS-preferred language to one of the four
+// pickLabels resolves the OS-preferred language to one of the translated
 // locales we ship copy for. We say "Open Link in Browser" rather than
 // "Open Link in New Window" because the link is opened via
 // shell.openExternal — it lands in the user's default browser, not in
@@ -134,5 +138,6 @@ function pickLabels(): ContextMenuLabels {
   }
   if (preferred.startsWith("ja")) return labelsByLocale.ja;
   if (preferred.startsWith("ko")) return labelsByLocale.ko;
+  if (preferred.startsWith("ru")) return labelsByLocale.ru;
   return labelsByLocale.en;
 }

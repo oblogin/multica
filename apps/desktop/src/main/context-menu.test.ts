@@ -182,6 +182,15 @@ describe("installContextMenu — link items", () => {
     wc.fire(baseSelection({ linkURL: "https://multica.ai" }));
     expect(lastMenuLabels()).toContain("Open Link in Browser");
   });
+
+  it("uses Russian labels when the OS preferred language is Russian", () => {
+    ctx.preferredLanguagesRef.current = ["ru-RU"];
+    const wc = makeWebContents();
+    installContextMenu(wc as never);
+    wc.fire(baseSelection({ linkURL: "https://multica.ai" }));
+    expect(lastMenuLabels()).toContain("Открыть ссылку в браузере");
+    expect(lastMenuLabels()).toContain("Копировать адрес ссылки");
+  });
 });
 
 // --- helpers ---

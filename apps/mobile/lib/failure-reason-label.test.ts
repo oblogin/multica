@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 
 import chatEn from "../locales/en/chat.json";
+import chatRu from "../locales/ru/chat.json";
 import chatZh from "../locales/zh-Hans/chat.json";
 import { failureReasonKey, REASONS } from "./failure-reason-label";
 describe("failureReasonLabel", () => {
@@ -30,8 +31,10 @@ describe("failureReasonLabel", () => {
         Object.keys(bundle.failure_reason).map((key) => `failure_reason.${key}`),
       );
     const enKeys = localeKeys(chatEn);
+    const ruKeys = localeKeys(chatRu);
     const zhKeys = localeKeys(chatZh);
 
+    expect(ruKeys).toEqual(enKeys);
     expect(zhKeys).toEqual(enKeys);
 
     const setKeys = new Set([...REASONS].map((reason) => failureReasonKey(reason)));

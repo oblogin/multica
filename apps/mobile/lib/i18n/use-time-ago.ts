@@ -1,7 +1,9 @@
 import { useT } from "./config";
+import { useLocale } from "./use-locale";
 
 export function useTimeAgo() {
   const { t } = useT("common");
+  const locale = useLocale();
 
   return (dateStr: string): string => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -19,7 +21,7 @@ export function useTimeAgo() {
       return t("time.weeks_ago_other", { count: Math.floor(minutes / (60 * 24 * 7)) });
     }
 
-    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
+    return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(
       new Date(dateStr),
     );
   };

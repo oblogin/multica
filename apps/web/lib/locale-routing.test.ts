@@ -55,4 +55,18 @@ describe("locale routing", () => {
       }),
     ).toBe("ja");
   });
+
+  it("matches Russian browser language signals and prefers an explicit cookie", () => {
+    expect(
+      resolveLocaleFromSignals({
+        acceptLanguage: "ru-RU,ru;q=0.9,en;q=0.8",
+      }),
+    ).toBe("ru");
+    expect(
+      resolveLocaleFromSignals({
+        cookieLocale: "ru",
+        acceptLanguage: "en-US,en;q=0.9",
+      }),
+    ).toBe("ru");
+  });
 });

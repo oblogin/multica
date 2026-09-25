@@ -12,7 +12,7 @@ export {
   type MikaContentLang,
   type MikaOnboardingDefinition,
 } from "./mika";
-type ContentLang = "en" | "zh" | "ko" | "ja";
+type ContentLang = "en" | "zh" | "ko" | "ja" | "ru";
 
 const CONTENT_LANG_BY_LOCALE: Record<SupportedLocale, ContentLang> = {
   en: "en",
@@ -22,6 +22,7 @@ const CONTENT_LANG_BY_LOCALE: Record<SupportedLocale, ContentLang> = {
   // Mika's onboarding content has no French variant yet, so French users
   // read the English copy rather than an untranslated placeholder.
   fr: "en",
+  ru: "ru",
 };
 
 /**

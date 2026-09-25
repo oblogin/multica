@@ -180,6 +180,7 @@ describe("PreferencesTab — Language switcher", () => {
   it.each([
     { name: "中文", locale: "zh-Hans" },
     { name: "Français", locale: "fr" },
+    { name: "Русский", locale: "ru" },
   ])("when logged in: saves $locale before reloading", async ({ name, locale }) => {
     userRef.current = { id: "user-1" };
     mockUpdateMe.mockResolvedValueOnce({});

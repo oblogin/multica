@@ -27,6 +27,13 @@ describe("mobile i18n singleton", () => {
     );
   });
 
+  it("loads the Russian bundle", async () => {
+    await i18n.changeLanguage("ru");
+    expect(i18n.t("actions.cancel")).toBe("Отмена");
+    expect(i18n.t("navigation:tabs.inbox")).toBe("Входящие");
+    expect(i18n.t("issues:runs.status.completed")).toBe("Запуск завершён");
+  });
+
   it("renders issue status enums as lowercase English and run statuses translated in Chinese", async () => {
     await i18n.changeLanguage("zh-Hans");
     expect(i18n.t("issues:status.todo")).toBe("todo");

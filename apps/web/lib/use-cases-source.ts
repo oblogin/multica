@@ -5,7 +5,9 @@ import { useCases } from "@/.source";
 import { mergeUseCasePagesWithEnglishFallback } from "./use-case-locale-fallback";
 
 // Use-case content uses dot-suffixed MDX files (`<slug>.en.mdx`,
-// `<slug>.zh.mdx`, `<slug>.ko.mdx`, and `<slug>.ja.mdx`). The public route remains prefix-free; request locale is
+// `<slug>.zh.mdx`, `<slug>.ko.mdx`, and `<slug>.ja.mdx`). Russian and French
+// readers use English article content until those MDX variants are written.
+// The public route remains prefix-free; request locale is
 // resolved through the same cookie/header path as the rest of the web app.
 export const i18n = defineI18n({
   languages: ["en", "zh", "ko", "ja"],
@@ -20,6 +22,7 @@ export function getUseCaseLangForLocale(locale: SupportedLocale): UseCaseLang {
   if (locale === "zh-Hans") return "zh";
   if (locale === "ko") return "ko";
   if (locale === "ja") return "ja";
+  if (locale === "ru" || locale === "fr") return "en";
   return "en";
 }
 
