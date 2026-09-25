@@ -69,6 +69,8 @@ const (
 	// TaskInteractionContextV1 means the daemon will put assigned, quoted
 	// clarifications into the prompt of this newly claimed run.
 	DaemonCapabilityTaskInteractionContextV1 = "task-interaction-context-v1"
+	// Offered at start only for a Claude issue run whose server gate is on.
+	DaemonCapabilityTaskInteractionLiveV1 = "task-interaction-live-v1"
 
 	TaskSupplementFailureTurnNotStarted   = "turn_not_started"
 	TaskSupplementFailureProviderRejected = "provider_rejected"

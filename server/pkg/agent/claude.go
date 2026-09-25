@@ -210,6 +210,8 @@ func (b *claudeBackend) Execute(ctx context.Context, prompt string, opts ExecOpt
 		unreadableAssistantCount := 0
 		controlErrors := make(chan error, 1)
 		var controlWrites sync.WaitGroup
+		controlCtx, cancelControls := context.WithCancel(runCtx)
+		seenQuestionRequests := make(map[string]struct{})
 
 		// On cancellation / timeout, terminate claude (and every MCP server and
 		// tool subprocess it spawned) BEFORE unblocking the scanner. EOF stdin
@@ -301,14 +303,45 @@ func (b *claudeBackend) Execute(ctx context.Context, prompt string, opts ExecOpt
 					})
 				}
 			case "control_request":
+				var control claudeControlRequestPayload
+				_ = json.Unmarshal(msg.Request, &control)
+				if control.ToolName == "AskUserQuestion" {
+					if _, duplicate := seenQuestionRequests[msg.RequestID]; duplicate {
+						continue
+					}
+					seenQuestionRequests[msg.RequestID] = struct{}{}
+				}
 				var reply func(io.Writer) error
 				if supplements != nil {
 					reply, _ = supplements.prepareHook(msg)
 				}
 				controlWrites.Add(1)
-				go func(msg claudeSDKMessage, reply func(io.Writer) error) {
+				go func(msg claudeSDKMessage, toolName string, reply func(io.Writer) error) {
 					defer controlWrites.Done()
 					if reply == nil {
+						if toolName == "AskUserQuestion" && opts.LiveQuestion != nil {
+							questionCtx, stopQuestion := context.WithTimeout(controlCtx, 30*time.Minute)
+							defer stopQuestion()
+							trySend(msgCh, Message{Type: MessageStatus, Status: "waiting_on_user"})
+							heartbeatDone := make(chan struct{})
+							go func() {
+								defer close(heartbeatDone)
+								ticker := time.NewTicker(5 * time.Second)
+								defer ticker.Stop()
+								for {
+									select {
+									case <-questionCtx.Done():
+										return
+									case <-ticker.C:
+										trySend(msgCh, Message{Type: MessageStatus, Status: "waiting_on_user"})
+									}
+								}
+							}()
+							b.handleLiveQuestionControlRequest(questionCtx, msg, inputWriter, opts.LiveQuestion, opts.LiveQuestionAck)
+							stopQuestion()
+							<-heartbeatDone
+							return
+						}
 						b.handleControlRequest(msg, inputWriter)
 						return
 					}
@@ -319,7 +352,7 @@ func (b *claudeBackend) Execute(ctx context.Context, prompt string, opts ExecOpt
 						}
 						cancel()
 					}
-				}(msg, reply)
+				}(msg, control.ToolName, reply)
 			case "control_response":
 				if supplements != nil {
 					supplements.handleResponse(msg.Response)
@@ -339,6 +372,7 @@ func (b *claudeBackend) Execute(ctx context.Context, prompt string, opts ExecOpt
 		// Wait for process exit, then release the cancellation handler.
 		exitErr := cmd.Wait()
 		close(procDone)
+		cancelControls()
 		// The leader is reaped; drop ownership. On Windows that closes the Job
 		// Object, which kills anything still inside it — precisely what should
 		// happen to a descendant that outlived the CLI (GH #7522).
@@ -559,6 +593,28 @@ func (b *claudeBackend) handleControlRequest(msg claudeSDKMessage, stdin interfa
 	if err := json.Unmarshal(msg.Request, &req); err != nil {
 		return
 	}
+	if req.ToolName == "AskUserQuestion" {
+		// Never let an unhandled question resolve as an empty user answer.
+		// The CLI fallback persists the question and exits this run.
+		response := map[string]any{
+			"type": "control_response",
+			"response": map[string]any{
+				"subtype": "success", "request_id": msg.RequestID,
+				"response": map[string]any{
+					"behavior": "deny",
+					"message":  "Interactive questions are unavailable in this run. Save the question with multica task ask and stop until the user answers.",
+				},
+			},
+		}
+		data, err := json.Marshal(response)
+		if err == nil {
+			_, err = stdin.Write(append(data, '\n'))
+		}
+		if err != nil {
+			b.cfg.Logger.Warn("claude: failed to deny interactive question", "error", err)
+		}
+		return
+	}
 
 	var inputMap map[string]any
 	if req.Input != nil {
@@ -594,6 +650,55 @@ func (b *claudeBackend) handleControlRequest(msg claudeSDKMessage, stdin interfa
 	data = append(data, '\n')
 	if _, err := stdin.Write(data); err != nil {
 		b.cfg.Logger.Warn("claude: failed to write control response", "error", err)
+	}
+}
+
+func (b *claudeBackend) handleLiveQuestionControlRequest(
+	ctx context.Context,
+	msg claudeSDKMessage,
+	stdin interface{ Write([]byte) (int, error) },
+	resolve func(context.Context, string, json.RawMessage) (map[string]string, error),
+	ack func(context.Context, string) error,
+) {
+	var req claudeControlRequestPayload
+	if json.Unmarshal(msg.Request, &req) != nil || req.Subtype != "tool_use" || req.ToolName != "AskUserQuestion" || msg.RequestID == "" {
+		b.handleControlRequest(msg, stdin)
+		return
+	}
+	var input map[string]any
+	if json.Unmarshal(req.Input, &input) != nil || input == nil {
+		b.handleControlRequest(msg, stdin)
+		return
+	}
+	// The model cannot pre-fill answers. The callback supplies only a human
+	// response that the server assigned to this exact live request.
+	delete(input, "answers")
+	answers, err := resolve(ctx, msg.RequestID, req.Input)
+	if ctx.Err() != nil {
+		return
+	}
+	decision := map[string]any{"behavior": "deny", "message": "No human answer was delivered. Check whether the question is saved in Multica; if absent, use multica task ask. Stop until the user answers."}
+	if err == nil && len(answers) > 0 {
+		input["answers"] = answers
+		decision = map[string]any{"behavior": "allow", "updatedInput": input}
+	}
+	response := map[string]any{
+		"type": "control_response",
+		"response": map[string]any{
+			"subtype": "success", "request_id": msg.RequestID, "response": decision,
+		},
+	}
+	data, marshalErr := json.Marshal(response)
+	if marshalErr != nil {
+		b.cfg.Logger.Warn("claude: failed to encode interactive answer", "error", marshalErr)
+		return
+	}
+	if _, writeErr := stdin.Write(append(data, '\n')); writeErr != nil {
+		b.cfg.Logger.Warn("claude: failed to deliver interactive answer", "error", writeErr)
+	} else if decision["behavior"] == "allow" && ack != nil {
+		if ackErr := ack(ctx, msg.RequestID); ackErr != nil {
+			b.cfg.Logger.Warn("claude: interactive answer acknowledgement is uncertain", "error", ackErr)
+		}
 	}
 }
 

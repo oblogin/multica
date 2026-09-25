@@ -67,6 +67,7 @@ type dbExecutor interface {
 
 type Config struct {
 	AllowSignup         bool
+	LiveInteractions    bool
 	AllowedEmails       []string
 	AllowedEmailDomains []string
 	// DisableWorkspaceCreation, when true, makes POST /api/workspaces return

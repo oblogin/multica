@@ -1463,6 +1463,7 @@ type TaskInteraction struct {
 	Version           int32              `json:"version"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	ProcessNonce      pgtype.UUID        `json:"process_nonce"`
 }
 
 type TaskInteractionAudit struct {
@@ -1486,6 +1487,7 @@ type TaskInteractionCapability struct {
 	ClaimGeneration pgtype.Timestamptz `json:"claim_generation"`
 	Capability      string             `json:"capability"`
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	LiveEnabled     bool               `json:"live_enabled"`
 }
 
 type TaskMessage struct {

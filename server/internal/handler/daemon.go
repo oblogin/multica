@@ -4193,6 +4193,20 @@ func (h *Handler) StartTask(w http.ResponseWriter, r *http.Request) {
 		} else if !errors.Is(capabilityErr, pgx.ErrNoRows) {
 			slog.Warn("start task: failed to load negotiated supplement capability", "task_id", taskID, "error", capabilityErr)
 		}
+		if !legacy && h.cfg.LiveInteractions && slices.Contains(req.Capabilities, protocol.DaemonCapabilityTaskInteractionLiveV1) {
+			var provider string
+			if err := h.DB.QueryRow(r.Context(), `SELECT provider FROM agent_runtime WHERE id=$1 AND workspace_id=$2`, task.RuntimeID, parseUUID(workspaceID)).Scan(&provider); err == nil && provider == "claude" {
+				result, err := h.DB.Exec(r.Context(), `UPDATE task_interaction_capability SET live_enabled=true
+					WHERE task_id=$1 AND runtime_id=$2 AND claim_generation=$3
+					AND capability=$4`, task.ID, task.RuntimeID, task.DispatchedAt,
+					protocol.DaemonCapabilityTaskInteractionContextV1)
+				if err != nil {
+					slog.Warn("start task: live interaction negotiation failed", "task_id", taskID, "error", err)
+				} else if result.RowsAffected() == 1 {
+					resp.InteractionLiveCapability = protocol.DaemonCapabilityTaskInteractionLiveV1
+				}
+			}
+		}
 	}
 	writeJSON(w, http.StatusOK, resp)
 }

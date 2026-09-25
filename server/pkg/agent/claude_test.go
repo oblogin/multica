@@ -167,6 +167,81 @@ func TestClaudeHandleControlRequestAutoApproves(t *testing.T) {
 	}
 }
 
+func TestClaudeHandleControlRequestNeverAutoAnswersQuestion(t *testing.T) {
+	t.Parallel()
+	b := &claudeBackend{cfg: Config{Logger: slog.Default()}}
+	var written bytes.Buffer
+	msg := claudeSDKMessage{
+		Type: "control_request", RequestID: "question-1",
+		Request: mustMarshal(t, claudeControlRequestPayload{
+			Subtype: "tool_use", ToolName: "AskUserQuestion",
+			Input: mustMarshal(t, map[string]any{"questions": []any{
+				map[string]any{"question": "Which scope?"},
+			}}),
+		}),
+	}
+	b.handleControlRequest(msg, &written)
+	var frame struct {
+		Response struct {
+			RequestID string `json:"request_id"`
+			Response  struct {
+				Behavior string `json:"behavior"`
+				Message  string `json:"message"`
+			} `json:"response"`
+		} `json:"response"`
+	}
+	if err := json.Unmarshal(bytes.TrimSpace(written.Bytes()), &frame); err != nil {
+		t.Fatal(err)
+	}
+	if frame.Response.RequestID != msg.RequestID || frame.Response.Response.Behavior != "deny" || !strings.Contains(frame.Response.Response.Message, "multica task ask") {
+		t.Fatalf("question was not explicitly denied: %+v", frame)
+	}
+}
+
+func TestClaudeLiveQuestionWritesHumanAnswerThenAcknowledges(t *testing.T) {
+	t.Parallel()
+	b := &claudeBackend{cfg: Config{Logger: slog.Default()}}
+	var written bytes.Buffer
+	acknowledged := false
+	msg := claudeSDKMessage{
+		Type: "control_request", RequestID: "request-7",
+		Request: mustMarshal(t, claudeControlRequestPayload{
+			Subtype: "tool_use", ToolName: "AskUserQuestion",
+			Input: mustMarshal(t, map[string]any{
+				"questions": []any{map[string]any{"question": "Which scope?"}},
+				"answers":   map[string]string{"Which scope?": "model guess"},
+			}),
+		}),
+	}
+	b.handleLiveQuestionControlRequest(context.Background(), msg, &written,
+		func(_ context.Context, requestID string, _ json.RawMessage) (map[string]string, error) {
+			if requestID != "request-7" {
+				t.Fatalf("unexpected request %q", requestID)
+			}
+			return map[string]string{"Which scope?": "Human choice"}, nil
+		},
+		func(_ context.Context, requestID string) error {
+			if written.Len() == 0 || requestID != "request-7" {
+				t.Fatal("ack before provider write")
+			}
+			acknowledged = true
+			return nil
+		})
+	var frame map[string]any
+	if err := json.Unmarshal(bytes.TrimSpace(written.Bytes()), &frame); err != nil {
+		t.Fatal(err)
+	}
+	response := frame["response"].(map[string]any)["response"].(map[string]any)
+	if response["behavior"] != "allow" || !acknowledged {
+		t.Fatalf("live answer not delivered: %v", response)
+	}
+	input := response["updatedInput"].(map[string]any)
+	answers := input["answers"].(map[string]any)
+	if answers["Which scope?"] != "Human choice" {
+		t.Fatalf("model answer was trusted: %v", answers)
+	}
+}
+
 func TestClaudeHandleControlRequestForcesBackgroundToolsForeground(t *testing.T) {
 	t.Parallel()
 

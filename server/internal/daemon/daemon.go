@@ -8391,11 +8391,15 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	if agent.SupportsTaskSupplement(provider, resolvedVersion) && task.IssueID != "" {
 		taskCapabilities = append(taskCapabilities, protocol.DaemonCapabilityTaskSupplementV1)
 	}
-	taskSupplementNegotiated, err := d.client.StartTask(prepareCtx, task, taskCapabilities...)
+	if provider == "claude" && task.IssueID != "" && task.StartClaimSupported {
+		taskCapabilities = append(taskCapabilities, protocol.DaemonCapabilityTaskInteractionLiveV1)
+	}
+	negotiated, err := d.client.StartTaskWithCapabilities(prepareCtx, task, taskCapabilities...)
 	if err != nil {
 		stopPrepareLease()
 		return TaskResult{}, fmt.Errorf("start task failed: %w", err)
 	}
+	taskSupplementNegotiated := negotiated.Supplement
 	if taskSupplementNegotiated {
 		// Register before provider launch so a hint cannot arrive in the gap
 		// between the committed server transition and turn/started. The row is
@@ -8695,6 +8699,11 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 		ClaudeSettingsPath:     env.ClaudeSettingsPath,
 		QwenpawWorkspace:       env.QwenpawWorkspace,
 	}
+	if negotiated.LiveInteraction {
+		questions := newLiveQuestionSession(d.client, task)
+		execOpts.LiveQuestion = questions.resolve
+		execOpts.LiveQuestionAck = questions.ack
+	}
 	// Some providers do not reliably load the per-task runtime config files we
 	// write into the task workdir:
 	//   - openclaw is pinned to the task workdir via the per-task config we
@@ -8808,6 +8817,11 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 		// task and taskCtx are local (runTask takes task by value), so these
 		// mutations only affect the retry.
 		execOpts.ResumeSessionID = ""
+		if negotiated.LiveInteraction {
+			questions := newLiveQuestionSession(d.client, task)
+			execOpts.LiveQuestion = questions.resolve
+			execOpts.LiveQuestionAck = questions.ack
+		}
 		task.PriorSessionID = ""
 		task.PriorSessionResumeUnavailable = true
 		execOpts.ResumeContinuityNotice = ""

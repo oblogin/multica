@@ -167,6 +167,7 @@ SET status = CASE
       WHEN i.consumed_by_task_id = t.id AND t.status = 'completed' THEN 'settled'
       WHEN i.consumed_by_task_id = t.id AND t.status = 'failed' THEN 'answered_detached'
       WHEN i.task_id = t.id AND i.status = 'pending' THEN 'open'
+      WHEN i.task_id = t.id AND t.status = 'completed' AND i.status IN ('delivering','delivered') THEN 'settled'
       WHEN i.task_id = t.id AND i.status IN ('answered','delivering','delivered') THEN 'answered_detached'
       ELSE i.status
     END,
@@ -174,6 +175,7 @@ SET status = CASE
       WHEN t.status = 'cancelled' THEN 'run_cancelled'
       WHEN i.task_id = t.id AND i.status = 'pending' AND t.status = 'failed' THEN 'process_lost'
       WHEN i.task_id = t.id AND i.status = 'pending' THEN 'run_ended'
+      WHEN i.task_id = t.id AND t.status = 'completed' AND i.status IN ('delivering','delivered') THEN 'delivered_to_source'
       WHEN i.task_id = t.id AND i.status IN ('delivering','delivered') THEN 'possibly_delivered'
       ELSE i.reason
     END,
