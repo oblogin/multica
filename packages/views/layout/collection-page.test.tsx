@@ -5,6 +5,7 @@ import {
   CollectionPageHeader,
   CollectionPageHeaderAction,
   CollectionPageState,
+  CollectionTitleInTabProvider,
 } from "./collection-page";
 
 describe("CollectionPageHeader", () => {
@@ -41,6 +42,26 @@ describe("CollectionPageHeader", () => {
   it("does not render a zero count", () => {
     render(<CollectionPageHeader icon={Users} title="Teams" count={0} />);
     expect(screen.queryByText("0")).not.toBeInTheDocument();
+  });
+
+  it("keeps the heading accessible while desktop shows title and count in the tab", () => {
+    render(
+      <CollectionTitleInTabProvider>
+        <CollectionPageHeader
+          icon={Users}
+          title="Teams"
+          count={4}
+          description="Manage collaborators."
+          learnMore={{ href: "https://example.com/docs", label: "Learn more" }}
+          actions={<CollectionPageHeaderAction icon={Plus} label="New team" />}
+        />
+      </CollectionTitleInTabProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Teams", level: 1 })).toHaveClass("sr-only");
+    expect(screen.queryByText("4")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Learn more" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New team" })).toBeInTheDocument();
   });
 });
 

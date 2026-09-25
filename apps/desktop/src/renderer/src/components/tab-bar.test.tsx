@@ -3,6 +3,7 @@ import {
   render,
   renderHook,
   fireEvent,
+  screen,
   waitFor,
   within,
 } from "@testing-library/react";
@@ -92,6 +93,11 @@ vi.mock("@multica/views/layout", () => ({
   ),
 }));
 
+const counts = vi.hoisted(() => ({ value: {} as Record<string, number | undefined> }));
+vi.mock("./collection-tab-counts", () => ({
+  useCollectionTabCounts: () => counts.value,
+}));
+
 import { TabBar } from "./tab-bar";
 
 function reset() {
@@ -114,6 +120,7 @@ function reset() {
   state.updateTab.mockReset();
   state.openIssueWindow.mockReset();
   pres.title = null;
+  counts.value = {};
 }
 
 beforeEach(() => {
@@ -225,6 +232,17 @@ describe("TabBar hover action buttons", () => {
 });
 
 describe("TabBar active-tab title persistence", () => {
+  it("shows live collection counts in the tab label without persisting them", () => {
+    counts.value = { projects: 2 };
+    const { rerender } = render(<TabBar />);
+    expect(screen.getByRole("button", { name: "Projects, 2" })).toBeInTheDocument();
+    expect(state.updateTab).not.toHaveBeenCalledWith("tB", { title: "Projects, 2" });
+
+    counts.value = { projects: 0 };
+    rerender(<TabBar />);
+    expect(screen.getByRole("button", { name: "Projects, 0" })).toBeInTheDocument();
+  });
+
   it("persists the resolved title only for the active tab", () => {
     pres.title = "MUL-1: Fixed";
     state.byWorkspace.acme.tabs = [
