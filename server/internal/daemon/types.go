@@ -148,6 +148,7 @@ type Task struct {
 	QuickCreateSourceContext      json.RawMessage        `json:"quick_create_source_context,omitempty"`      // immutable historical context, separate from the new instruction
 	WakeupID                      string                 `json:"wakeup_id,omitempty"`
 	HandoffNote                   string                 `json:"handoff_note,omitempty"` // legacy assignment handoff instruction; rendered only in the per-turn prompt
+	InteractionContext            string                 `json:"interaction_context,omitempty"`
 
 	SquadID               string `json:"squad_id,omitempty"`                // when the picker was a squad, the squad's UUID; Agent is still the resolved leader
 	SquadName             string `json:"squad_name,omitempty"`              // display name for the picker squad, used in prompt text

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX CONCURRENTLY task_interaction_capability_task_uidx ON task_interaction_capability (task_id);

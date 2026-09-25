@@ -230,7 +230,9 @@ func (c *Client) ClaimTask(ctx context.Context, runtimeID string) (*Task, error)
 	var resp struct {
 		Task *Task `json:"task"`
 	}
-	if err := c.postJSON(ctx, fmt.Sprintf("/api/daemon/runtimes/%s/tasks/claim", runtimeID), map[string]any{}, &resp); err != nil {
+	if err := c.postJSON(ctx, fmt.Sprintf("/api/daemon/runtimes/%s/tasks/claim", runtimeID), map[string]any{
+		"capabilities": []string{protocol.DaemonCapabilityTaskInteractionContextV1},
+	}, &resp); err != nil {
 		return nil, err
 	}
 	return resp.Task, nil
@@ -303,9 +305,10 @@ func (c *Client) claimTasksWithHints(ctx context.Context, daemonID string, runti
 	defer cancel()
 	var resp claimTasksResult
 	if err := c.postJSON(reqCtx, "/api/daemon/tasks/claim", map[string]any{
-		"daemon_id":   daemonID,
-		"runtime_ids": runtimeIDs,
-		"max_tasks":   maxTasks,
+		"daemon_id":    daemonID,
+		"runtime_ids":  runtimeIDs,
+		"max_tasks":    maxTasks,
+		"capabilities": []string{protocol.DaemonCapabilityTaskInteractionContextV1},
 	}, &resp); err != nil {
 		return claimTasksResult{}, err
 	}

@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS task_interaction_detached_deadline_idx;

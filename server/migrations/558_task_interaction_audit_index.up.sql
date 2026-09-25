@@ -1,0 +1,1 @@
+CREATE INDEX CONCURRENTLY task_interaction_audit_interaction_idx ON task_interaction_audit (interaction_id, created_at);

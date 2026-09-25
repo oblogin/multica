@@ -2862,6 +2862,7 @@ func (s *TaskService) CancelTaskWithResult(ctx context.Context, taskID pgtype.UU
 	opts.ErrorMessage = util.SanitizeTextForPostgres(opts.ErrorMessage)
 	opts.FailureReason = util.SanitizeTextForPostgres(opts.FailureReason)
 	opts.CancelledBy.Name = util.SanitizeTextForPostgres(opts.CancelledBy.Name)
+	scopeTask, _ := s.Queries.GetAgentTask(ctx, taskID)
 
 	if opts.UserInitiated && (opts.ErrorMessage != "" || opts.FailureReason != "") {
 		return nil, errors.New("user-initiated cancellation cannot carry a server failure reason")
@@ -2883,6 +2884,9 @@ func (s *TaskService) CancelTaskWithResult(ctx context.Context, taskID pgtype.UU
 			return nil, errors.New("queue action must be edit or remove")
 		}
 		err = s.runInTx(ctx, func(qtx *db.Queries) error {
+			if err := lockTaskInteractionScope(ctx, qtx, scopeTask); err != nil {
+				return err
+			}
 			if _, err := qtx.LockChatSessionForTask(ctx, taskID); err != nil {
 				return fmt.Errorf("lock queued chat session: %w", err)
 			}
@@ -2908,6 +2912,9 @@ func (s *TaskService) CancelTaskWithResult(ctx context.Context, taskID pgtype.UU
 		// other connection while the pointer still names the previous turn's
 		// session, and a queued follow-up can resume that older session.
 		err = s.runInTx(ctx, func(qtx *db.Queries) error {
+			if err := lockTaskInteractionScope(ctx, qtx, scopeTask); err != nil {
+				return err
+			}
 			if err := lockChatSessionForTaskWrite(ctx, qtx, taskID); err != nil {
 				return err
 			}
@@ -4372,11 +4379,15 @@ func (s *TaskService) CompleteTask(ctx context.Context, taskID pgtype.UUID, resu
 // terminal task is still an idempotent success but must not emit them again.
 func (s *TaskService) CompleteTaskWithTransition(ctx context.Context, taskID pgtype.UUID, result []byte, sessionID, workDir, branchName string, sessionRolloutMissing bool, retiredSessionID, durableWorkDir string) (*db.AgentTaskQueue, bool, error) {
 	var task db.AgentTaskQueue
+	scopeTask, _ := s.Queries.GetAgentTask(ctx, taskID)
 	// chatAssistantMsg is the single assistant outcome row written for a chat
 	// task inside the completion transaction below. It is broadcast (chat:done)
 	// only after the transaction commits.
 	var chatAssistantMsg *db.ChatMessage
 	if err := s.runInTx(ctx, func(qtx *db.Queries) error {
+		if err := lockTaskInteractionScope(ctx, qtx, scopeTask); err != nil {
+			return err
+		}
 		if err := lockChatSessionForTaskWrite(ctx, qtx, taskID); err != nil {
 			return err
 		}
@@ -4794,6 +4805,7 @@ func (s *TaskService) FailTask(ctx context.Context, taskID pgtype.UUID, errMsg, 
 // CompleteTaskWithTransition. The bool is false for an idempotent replay that
 // observed an already-terminal row.
 func (s *TaskService) FailTaskWithTransition(ctx context.Context, taskID pgtype.UUID, errMsg, sessionID, workDir, branchName, failureReason string, sessionRolloutMissing bool, retiredSessionID, durableWorkDir string) (*db.AgentTaskQueue, bool, error) {
+	scopeTask, _ := s.Queries.GetAgentTask(ctx, taskID)
 	// Strip bytes PostgreSQL cannot store before anything else reads errMsg, so
 	// the classifier, the transaction and every downstream consumer see the one
 	// text we will actually persist (GH #7098). Kept at the service boundary
@@ -4865,6 +4877,9 @@ func (s *TaskService) FailTaskWithTransition(ctx context.Context, taskID pgtype.
 	var task db.AgentTaskQueue
 	var retried *db.AgentTaskQueue
 	if err := s.runInTx(ctx, func(qtx *db.Queries) error {
+		if err := lockTaskInteractionScope(ctx, qtx, scopeTask); err != nil {
+			return err
+		}
 		if err := lockChatSessionForTaskWrite(ctx, qtx, taskID); err != nil {
 			return err
 		}
@@ -4894,6 +4909,15 @@ func (s *TaskService) FailTaskWithTransition(ctx context.Context, taskID pgtype.
 		// never looked at the covering task's status either.
 		if err := SettleTerminalTaskState(ctx, qtx, t); err != nil {
 			return err
+		}
+		if t.IssueID.Valid {
+			openQuestion, err := qtx.HasOpenSourceInteraction(ctx, t.ID)
+			if err != nil {
+				return fmt.Errorf("check open task question: %w", err)
+			}
+			if openQuestion {
+				wantRetry = false
+			}
 		}
 
 		// Keep resume-unsafe sessions on the task row for observability, but
@@ -5407,6 +5431,15 @@ func (s *TaskService) MaybeRetryFailedTask(ctx context.Context, parent db.AgentT
 	if parent.Status != "failed" {
 		return nil, nil
 	}
+	if parent.IssueID.Valid {
+		openQuestion, err := s.Queries.HasOpenSourceInteraction(ctx, parent.ID)
+		if err != nil {
+			return nil, err
+		}
+		if openQuestion {
+			return nil, nil
+		}
+	}
 	reason := ""
 	if parent.FailureReason.Valid {
 		reason = parent.FailureReason.String
@@ -5480,6 +5513,9 @@ func (s *TaskService) MaybeRetryFailedTask(ctx context.Context, parent db.AgentT
 	}
 	defer tx.Rollback(ctx)
 	qtx := s.Queries.WithTx(tx)
+	if err := lockTaskInteractionScope(ctx, qtx, parent); err != nil {
+		return nil, err
+	}
 	if err := guardIssueNotInTriage(ctx, qtx, parent.IssueID, OriginDerived); err != nil {
 		if errors.Is(err, ErrIssueInTriage) {
 			slog.Info("task auto-retry skipped: issue is in triage",
@@ -6122,6 +6158,9 @@ func SettleTerminalTaskState(ctx context.Context, q *db.Queries, tasks ...db.Age
 	}
 	if _, err := q.SettleTerminalTaskSupplements(ctx, taskIDs); err != nil {
 		return fmt.Errorf("settle terminal task supplements: %w", err)
+	}
+	if _, err := q.SettleTerminalTaskInteractions(ctx, taskIDs); err != nil {
+		return fmt.Errorf("settle terminal task interactions: %w", err)
 	}
 	return SettleDeliveredDelegatedFailureRecoveries(ctx, q, tasks...)
 }

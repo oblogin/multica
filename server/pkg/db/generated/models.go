@@ -1434,6 +1434,60 @@ type SysCronExecution struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
+type TaskInteraction struct {
+	ID                pgtype.UUID        `json:"id"`
+	WorkspaceID       pgtype.UUID        `json:"workspace_id"`
+	IssueID           pgtype.UUID        `json:"issue_id"`
+	AgentID           pgtype.UUID        `json:"agent_id"`
+	CommentThreadID   pgtype.UUID        `json:"comment_thread_id"`
+	TaskID            pgtype.UUID        `json:"task_id"`
+	RuntimeID         pgtype.UUID        `json:"runtime_id"`
+	ClaimGeneration   pgtype.Timestamptz `json:"claim_generation"`
+	Provider          pgtype.Text        `json:"provider"`
+	ProviderSessionID pgtype.Text        `json:"provider_session_id"`
+	ProviderRequestID pgtype.Text        `json:"provider_request_id"`
+	ClientCreateID    pgtype.UUID        `json:"client_create_id"`
+	Mode              string             `json:"mode"`
+	Questions         []byte             `json:"questions"`
+	Status            string             `json:"status"`
+	Reason            pgtype.Text        `json:"reason"`
+	Answer            []byte             `json:"answer"`
+	AnsweredBy        pgtype.UUID        `json:"answered_by"`
+	AnsweredAt        pgtype.Timestamptz `json:"answered_at"`
+	ClientAnswerID    pgtype.UUID        `json:"client_answer_id"`
+	ExpiresAt         pgtype.Timestamptz `json:"expires_at"`
+	DetachedExpiresAt pgtype.Timestamptz `json:"detached_expires_at"`
+	DeliveredAt       pgtype.Timestamptz `json:"delivered_at"`
+	ConsumedByTaskID  pgtype.UUID        `json:"consumed_by_task_id"`
+	AssignCount       int32              `json:"assign_count"`
+	Version           int32              `json:"version"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+}
+
+type TaskInteractionAudit struct {
+	ID            pgtype.UUID        `json:"id"`
+	InteractionID pgtype.UUID        `json:"interaction_id"`
+	WorkspaceID   pgtype.UUID        `json:"workspace_id"`
+	IssueID       pgtype.UUID        `json:"issue_id"`
+	TaskID        pgtype.UUID        `json:"task_id"`
+	ActorType     string             `json:"actor_type"`
+	ActorID       pgtype.UUID        `json:"actor_id"`
+	Action        string             `json:"action"`
+	Detail        []byte             `json:"detail"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type TaskInteractionCapability struct {
+	TaskID          pgtype.UUID        `json:"task_id"`
+	WorkspaceID     pgtype.UUID        `json:"workspace_id"`
+	IssueID         pgtype.UUID        `json:"issue_id"`
+	RuntimeID       pgtype.UUID        `json:"runtime_id"`
+	ClaimGeneration pgtype.Timestamptz `json:"claim_generation"`
+	Capability      string             `json:"capability"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+}
+
 type TaskMessage struct {
 	ID              pgtype.UUID        `json:"id"`
 	TaskID          pgtype.UUID        `json:"task_id"`

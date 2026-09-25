@@ -1706,9 +1706,10 @@ const claimBatchMaxTasksCap = 32
 func (h *Handler) ClaimTasksByRuntime(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	var req struct {
-		DaemonID   string   `json:"daemon_id"`
-		RuntimeIDs []string `json:"runtime_ids"`
-		MaxTasks   int      `json:"max_tasks"`
+		DaemonID     string   `json:"daemon_id"`
+		RuntimeIDs   []string `json:"runtime_ids"`
+		MaxTasks     int      `json:"max_tasks"`
+		Capabilities []string `json:"capabilities"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -1855,6 +1856,16 @@ func (h *Handler) ClaimTasksByRuntime(w http.ResponseWriter, r *http.Request) {
 			// Skip it — non-settling failures leave the task dispatched for
 			// the reclaim path.
 			continue
+		}
+		resp.interactionContextSupported = slices.Contains(req.Capabilities, protocol.DaemonCapabilityTaskInteractionContextV1)
+		if !resp.interactionContextSupported {
+			pending, err := h.hasAssignableInteraction(r.Context(), task)
+			if err != nil || pending {
+				if _, requeueErr := h.TaskService.RequeueTaskAfterClaimFailure(r.Context(), task); requeueErr != nil {
+					slog.Warn("requeue task requiring clarification-capable daemon", "task_id", uuidToString(task.ID), "error", requeueErr)
+				}
+				continue
+			}
 		}
 		if !rt.OwnerID.Valid {
 			slog.Error("batch claim: runtime owner missing; cancelling task to avoid unscoped agent credentials",
@@ -2049,6 +2060,35 @@ func (h *Handler) finalizeClaimDelivery(
 		// its current owner as the task-token identity rather than the stale
 		// claim-time snapshot captured by the caller.
 		tokenParams.UserID = locked.OwnerID
+		if response != nil && response.interactionContextSupported && task.IssueID.Valid {
+			if err := qtx.RecordTaskInteractionContextCapability(ctx, db.RecordTaskInteractionContextCapabilityParams{
+				TaskID: task.ID, RuntimeID: task.RuntimeID, DispatchedAt: task.DispatchedAt,
+			}); err != nil {
+				return fmt.Errorf("record interaction context capability: %w", err)
+			}
+			assigned, err := qtx.AssignTaskInteractionAnswers(ctx, db.AssignTaskInteractionAnswersParams{
+				ClaimTaskID: task.ID, ClaimRuntimeID: task.RuntimeID,
+				ClaimDispatchedAt: task.DispatchedAt,
+			})
+			if err != nil {
+				return fmt.Errorf("assign task clarifications: %w", err)
+			}
+			var contextText strings.Builder
+			for _, item := range assigned {
+				if err := qtx.RecordTaskInteractionAssignment(ctx, db.RecordTaskInteractionAssignmentParams{
+					InteractionID: item.ID, RecipientTaskID: task.ID,
+				}); err != nil {
+					return fmt.Errorf("audit clarification assignment: %w", err)
+				}
+				// %q keeps embedded newlines, Markdown fences and shell syntax in
+				// the answer inside a quoted data value, not a new instruction.
+				fmt.Fprintf(&contextText, "interaction_id=%s source_task_id=%s answered_by=%s answered_at=%s possibly_delivered=%t\nquestions=%q\nanswer=%q\n",
+					uuidToString(item.ID), uuidToString(item.SourceTaskID), uuidToString(item.AnsweredBy),
+					item.AnsweredAt.Time.Format(time.RFC3339), item.Reason.String == "possibly_delivered",
+					string(item.Questions), string(item.Answer))
+			}
+			response.InteractionContext = contextText.String()
+		}
 		return nil
 	}
 
@@ -3732,6 +3772,15 @@ func (h *Handler) ClaimTaskByRuntime(w http.ResponseWriter, r *http.Request) {
 	}
 	runtimeWorkspaceID := uuidToString(runtime.WorkspaceID)
 	authMs = time.Since(start).Milliseconds()
+	var claimReq struct {
+		Capabilities []string `json:"capabilities"`
+	}
+	if r.ContentLength != 0 {
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&claimReq); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid claim request")
+			return
+		}
+	}
 
 	claimStart := time.Now()
 	task, err := h.TaskService.ClaimTaskForRuntime(r.Context(), parseUUID(runtimeID))
@@ -3774,6 +3823,20 @@ func (h *Handler) ClaimTaskByRuntime(w http.ResponseWriter, r *http.Request) {
 		}
 		writeError(w, failure.status, failure.message)
 		return
+	}
+	resp.interactionContextSupported = slices.Contains(claimReq.Capabilities, protocol.DaemonCapabilityTaskInteractionContextV1)
+	if !resp.interactionContextSupported {
+		pending, err := h.hasAssignableInteraction(r.Context(), *task)
+		if err != nil || pending {
+			requeueFailedClaim := func() {
+				if _, requeueErr := h.TaskService.RequeueTaskAfterClaimFailure(r.Context(), *task); requeueErr != nil {
+					slog.Warn("requeue task requiring clarification-capable daemon", "task_id", uuidToString(task.ID), "error", requeueErr)
+				}
+			}
+			requeueFailedClaim()
+			writeErrorCode(w, http.StatusConflict, "interaction_context_unsupported", "this daemon cannot receive saved clarification context")
+			return
+		}
 	}
 	commentBackedTask := task.TriggerCommentID.Valid || len(task.CoalescedCommentIds) > 0
 	requeueFailedClaim := func(reason string) {
@@ -5659,6 +5722,7 @@ func (h *Handler) ListTasksByIssue(w http.ResponseWriter, r *http.Request) {
 		resp[i] = taskToResponse(t, workspaceID)
 	}
 	h.hydrateTaskSupplementMetadata(r.Context(), r, issue.WorkspaceID, tasks, resp)
+	h.hydrateTaskInteractionMetadata(r.Context(), issue.WorkspaceID, tasks, resp)
 	// Execution-log rows render the "on behalf of <member>" badge, so this
 	// issue-facing surface must resolve initiator/originator names (departed-safe,
 	// one batch) — otherwise the badge falls back to "someone" on issue detail.

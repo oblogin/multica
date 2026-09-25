@@ -66,6 +66,9 @@ const (
 	// It is persisted when this exact task enters running; absence always means
 	// unsupported so mixed server/daemon versions fail closed.
 	DaemonCapabilityTaskSupplementV1 = "task-supplement-v1"
+	// TaskInteractionContextV1 means the daemon will put assigned, quoted
+	// clarifications into the prompt of this newly claimed run.
+	DaemonCapabilityTaskInteractionContextV1 = "task-interaction-context-v1"
 
 	TaskSupplementFailureTurnNotStarted   = "turn_not_started"
 	TaskSupplementFailureProviderRejected = "provider_rejected"
